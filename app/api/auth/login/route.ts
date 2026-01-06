@@ -25,7 +25,7 @@ export async function POST(request: Request) {
             const token = jwt.sign(tokenData, process.env.JWT_SECRET!, {
                 expiresIn: "2hr"
             })
-            const response = NextResponse.json({message: "Login successful"})
+            const response = NextResponse.json({message: "Login successful"}, {status:200})
             response.cookies.set({
                 name: 'auth_user',
                 value: token,
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
                 maxAge: 60 * 60 * 2
             })
 
-            return NextResponse.json({ message: 'Logged in!' }, { status: 200 })
+            return response
 
         } catch (err) {
             return NextResponse.json({ message: 'failed to verify' }, { status: 400 });
