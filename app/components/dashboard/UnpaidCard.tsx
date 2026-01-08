@@ -11,7 +11,7 @@ interface UnpaidData {
 }
 
 const UnpaidCard = () => {
-    const [unpaidList, setUnpaidList] = useState<UnpaidData[]>([]);
+    const [unpaidList, setUnpaidList] = useState<UnpaidData[]>([]); 
     const router = useRouter();
     useEffect(() => {
         const fetchUnpaid = async () => {
@@ -51,7 +51,7 @@ const UnpaidCard = () => {
                     </thead>
                     <tbody >
                         {unpaidList.map((item) => (
-                            <tr key={item.id} className="hover:bg-blue-600/60 cursor-pointer transition-colors" onClick={() => handleTenantClick(item.id)}>
+                            <tr key={item.id} className="odd:bg-white even:bg-slate-100 hover:bg-blue-600/60 cursor-pointer transition-colors" onClick={() => handleTenantClick(item.id)}>
                                 <td className="text-sm px-4 py-3 font-bold">{item.room_number}</td>
                                 <td className="text-sm px-4 py-3">{item.fullname}</td>
                                 <td className="text-right text-sm px-4 py-3 font-bold text-red-600">{item.total_debt}</td>

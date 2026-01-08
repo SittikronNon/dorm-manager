@@ -1,16 +1,41 @@
-import pool from "@/app/database/db";
+import pool from "@/database/db";
 import { NextResponse } from "next/server";
 
 
 export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const onlyExpiring = searchParams.get('expiring');
         //Terminate any expired leases
         await pool.query(`
-        UPDATE leases 
-        SET status = 'inactive' 
-        WHERE status = 'active' 
-        AND end_date < CURRENT_DATE
+            WITH expired_leases AS (
+                UPDATE leases
+                SET status = 'inactive'
+                WHERE status = 'active'
+                AND end_date < CURRENT_DATE
+                RETURNING room_id
+            )
+            UPDATE rooms
+            SET is_available = true
+            WHERE id IN (SELECT room_id FROM expired_leases)
         `);
+
+        if(onlyExpiring === "true") {
+            const result  = await pool.query(`
+                SELECT	l.id,
+                r.room_number,
+                t.fullname,
+                l.start_date,
+                l.end_date
+                FROM leases l
+                JOIN rooms r ON r.id = l.room_id
+                JOIN tenants t ON t.id = l.tenant_id
+                WHERE l.status = 'active'
+                AND DATE_TRUNC('month', l.end_date) = DATE_TRUNC('month', CURRENT_DATE)
+                `)
+
+                return NextResponse.json(result.rows);
+        }
 
         const result = await pool.query(`
             SELECT	l.id,

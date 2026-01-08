@@ -1,7 +1,8 @@
 'use client'
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react"
-
+import { dateFormatter } from "@/lib/formatter";
 interface LeasesData {
     id: number;
     room_number: string;
@@ -17,18 +18,14 @@ interface LeasesData {
     status: string;
 }
 
-const dateFormatter = (dateString: string) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('th-TH', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-    })
-}
+
 
 export default function Page() {
     const [leases, setLeases] = useState<LeasesData[]>([]);
+    const [isFound, setIsFound] = useState<boolean | undefined>();
+    const [loading, setLoading] = useState<boolean>(true);
+
+    const router = useRouter();
 
     useEffect(() => {
         const fetchLeases = async () => {
@@ -39,10 +36,35 @@ export default function Page() {
                 setLeases(data);
             } catch (err) {
                 console.error("Failed to fetch the data from APIs", err)
+            } finally {
+                setLoading(false)
+                setIsFound(true)
             }
         }
         fetchLeases();
+
     }, [])
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-r-2 border-blue-600 "></div>
+                    <p className="mt-4 text-gray-600">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isFound) {
+        return (
+            <div className="flex flex-col justify-center items-center min-h-screen p-10 text-center">
+                <h2 className="text-2xl font-bold">Tenant Not Found</h2>
+                <p>The tenant you are looking for does not exist.</p>
+                <button onClick={() => { router.push('/dashboard') }} className="text-blue-500 underline cursor-pointer">Back to List</button>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen m-4">
@@ -68,17 +90,17 @@ export default function Page() {
                     <tbody>
                         {leases.map((lease) => (
                             <tr key={lease.id} className="hover:bg-blue-600/60 odd:bg-white even:bg-slate-100 cursor-pointer transition-colors">
-                                <td className="text-sm px-4 py-3 font-bold">{lease.room_number}</td>
-                                <td className="text-sm px-4 py-3 font-bold">{lease.fullname}</td>
-                                <td className="text-sm px-4 py-3 font-bold">{lease.id_number}</td>
-                                <td className="text-sm px-4 py-3 font-bold">{lease.phone_number}</td>
-                                <td className="text-sm px-4 py-3 font-bold">{lease.monthly_rent}</td>
-                                <td className="text-sm px-4 py-3 font-bold">{dateFormatter(lease.start_date)}</td>
-                                <td className="text-sm px-4 py-3 font-bold">{dateFormatter(lease.end_date)}</td>
-                                <td className="text-sm px-4 py-3 font-bold">{lease.electricity_rate_per_unit}</td>
-                                <td className="text-sm px-4 py-3 font-bold">{lease.water_rate_per_unit}</td>
-                                <td className="text-sm px-4 py-3 font-bold">{dateFormatter(lease.created_at)}</td>
-                                <td className="text-sm px-4 py-3 font-bold text-center align-middle">
+                                <td className="text-sm px-4 py-3">{lease.room_number}</td>
+                                <td className="text-sm px-4 py-3">{lease.fullname}</td>
+                                <td className="text-sm px-4 py-3">{lease.id_number}</td>
+                                <td className="text-sm px-4 py-3">{lease.phone_number}</td>
+                                <td className="text-sm px-4 py-3">{lease.monthly_rent}</td>
+                                <td className="text-sm px-4 py-3">{dateFormatter(lease.start_date)}</td>
+                                <td className="text-sm px-4 py-3">{dateFormatter(lease.end_date)}</td>
+                                <td className="text-sm px-4 py-3">{lease.electricity_rate_per_unit}</td>
+                                <td className="text-sm px-4 py-3">{lease.water_rate_per_unit}</td>
+                                <td className="text-sm px-4 py-3">{dateFormatter(lease.created_at)}</td>
+                                <td className="text-sm px-4 py-3 text-bold text-center align-middle">
                                     <span className={`inline-block rounded-full w-20 ${lease.status === 'active' ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600'}`}>
                                         {lease.status}
                                     </span>

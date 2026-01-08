@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import pool from "@/app/database/db";
+import pool from "@/database/db";
 
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
@@ -49,7 +49,8 @@ export async function GET(request: Request) {
 
 	try {
 		const result = await pool.query(`
-            SELECT r.room_number AS room_number,
+            SELECT  i.id,
+			r.room_number AS room_number,
 	   t.fullname,
 	   i.electricity_units_used,
 	   l.electricity_rate_per_unit,
@@ -63,9 +64,14 @@ export async function GET(request: Request) {
 	   JOIN leases l ON l.id = i.lease_id
 	   JOIN rooms r ON r.id = l.room_id
 	   JOIN tenants t ON t.id = l.tenant_id
-	   ORDER BY room_number ASC`)
-		const invoices = result.rows
-		return NextResponse.json({ message: 'Invoices retrieved!', invoices }, { status: 200 })
+	   ORDER BY CASE
+					WHEN i.status = 'unpaid' THEN 1
+					WHEN i.status = 'paid' THEN 2
+					ELSE 3
+				END ASC,
+				room_number ASC
+						   `)
+		return NextResponse.json(result.rows)
 	} catch (err) {
 		return NextResponse.json({ message: 'Failed to get the data!' }, { status: 500 })
 	}

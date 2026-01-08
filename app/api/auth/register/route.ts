@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import pool from "@/app/database/db";
+import pool from "@/database/db";
 import bcrypt from "bcrypt"
 
 

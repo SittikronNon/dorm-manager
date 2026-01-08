@@ -41,7 +41,7 @@ const RoomsCard = () => {
           </thead>
           <tbody >
             {availableRooms.map((room) => (
-              <tr key={room.id} className="hover:bg-blue-600/60 cursor-pointer transition-colors">
+              <tr key={room.id} className="odd:bg-white even:bg-slate-100 hover:bg-blue-600/60 cursor-pointer transition-colors">
                 <td className="text-sm px-4 py-3 font-bold">{room.room_number}</td>
                 <td className="text-sm px-4 py-3 font-bold">{room.monthly_rent}</td>
                 <td className={`px-4 py-3 text-center align-middle `}>

@@ -1,7 +1,7 @@
 'use client'
-import { notFound, useParams, useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react";
-
+import { dateFormatter } from "@/lib/formatter";
 interface TenantData {
     id: number;
     fullname: string;
@@ -19,15 +19,7 @@ interface TenantData {
     paid_at: string;
 }
 
-const dateFormatter = (dateString: string) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('th-TH', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-    })
-}
+
 
 export default function Page() {
     const params = useParams();

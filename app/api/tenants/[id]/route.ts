@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import pool from "@/app/database/db";
+import pool from "@/database/db";
 
 async function checkingTenant(id: number | string) {
     if (isNaN(Number(id))) return { error: NextResponse.json({ message: 'Invalid ID: must be a number' }, { status: 400 }) };
