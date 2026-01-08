@@ -44,7 +44,7 @@ export default function Page() {
 
     return (
         <div className="flex justify-center items-center h-dvh ">
-            <form onSubmit={handleOnSubmit} action="" className="flex justify-center items-center flex-col gap-2 bg-violet-300 p-50 shadow-md">
+            <form onSubmit={handleOnSubmit} action="" className="flex justify-center items-center flex-col gap-2 bg-violet-300 p-50 shadow-md rounded-md">
                 <h1>Login Page!</h1>
                 <div className="flex flex-col gap-2">
                     <label htmlFor="username">Username</label>

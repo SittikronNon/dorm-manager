@@ -2,12 +2,28 @@ import pool from "@/app/database/db";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-    try {
-        const result = await pool.query(`SELECT room_number, monthly_rent, is_available FROM rooms ORDER BY room_number ASC`);
-        const rooms = result.rows;
-        return NextResponse.json({ message: 'successfully fetch the rooms data', rooms }, { status: 200 })
+    const { searchParams } = new URL(request.url);
+    const onlyAvailable = searchParams.get('available');
+    if (onlyAvailable === 'true') {
+        try {
+            const result = await pool.query(`SELECT *
+                                                    FROM rooms
+                                                    WHERE is_available = true
+                                                    ORDER BY room_number ASC
+                                            `)
+            return NextResponse.json(result.rows);
 
-    } catch (err) {
-        return NextResponse.json({ message: 'Failed to get the Rooms data' }, { status: 409 })
+        } catch (err) {
+            return NextResponse.json({ message: 'Failed on the database side' }, { status: 409 })
+        }
+    } else {
+        try {
+            const result = await pool.query(`SELECT	* FROM rooms ORDER BY room_number ASC`);
+            return NextResponse.json(result.rows)
+
+        } catch (err) {
+            return NextResponse.json({ message: 'Failed to get the Rooms data' }, { status: 409 })
+        }
     }
+
 }

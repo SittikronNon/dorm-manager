@@ -3,9 +3,16 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
     try {
-        const result = await pool.query(`SELECT fullname, phone_number, id_number, created_at, is_active FROM tenants ORDER BY created_at ASC`);
-        const rooms = result.rows;
-        return NextResponse.json({ message: 'successfully fetch the rooms data', rooms }, { status: 200 })
+        const result = await pool.query(`
+            SELECT id,
+	   fullname,
+	   phone_number,
+	   id_number
+	   FROM tenants
+	   WHERE is_active = true
+            `);
+
+        return NextResponse.json(result.rows)
 
     } catch (err) {
         return NextResponse.json({ message: 'Failed to get the Rooms data' }, { status: 409 })

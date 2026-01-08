@@ -26,6 +26,27 @@ export async function GET(request: Request) {
 		}
 	}
 
+	if (mode === 'unpaid') {
+		try {
+			const result = await pool.query(`SELECT 
+                                        t.id,
+                                        r.room_number,
+                                        t.fullname,
+                                        SUM(i.total_amount) AS total_debt
+                                        FROM invoices i
+                                        JOIN leases l ON l.id = i.lease_id
+                                        JOIN rooms r ON r.id = l.room_id
+                                        JOIN tenants t ON t.id = l.tenant_id
+                                        WHERE i.status = 'unpaid'
+                                        GROUP BY r.room_number, t.fullname, t.id
+                                        ORDER BY r.room_number ASC`)
+			return NextResponse.json(result.rows);
+
+		} catch (err) {
+			return NextResponse.json({ message: 'Failed on the database side' }, { status: 409 })
+		}
+	}
+
 	try {
 		const result = await pool.query(`
             SELECT r.room_number AS room_number,
@@ -120,7 +141,7 @@ export async function PATCH(request: Request) {
 
 	const ids = Array.isArray(body) ? body : body.invoicesId || [];
 
-	if(!Array.isArray(ids) || ids.length === 0) return NextResponse.json({message: "No valid IDs provided"}, {status:400})
+	if (!Array.isArray(ids) || ids.length === 0) return NextResponse.json({ message: "No valid IDs provided" }, { status: 400 })
 
 	const hasInvalid = ids.some((id: string | number) => isNaN(Number(id)) || id === null);
 

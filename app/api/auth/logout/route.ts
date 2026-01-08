@@ -5,9 +5,10 @@ export async function POST() {
         const response = NextResponse.json({ message: "Logged out successful!" });
 
         response.cookies.set({
-            name: "auth_token",
+            name: "auth_user",
             value: "",
             maxAge: 0,
+            expires: new Date(0),
             path: '/'
         });
 

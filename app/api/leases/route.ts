@@ -4,26 +4,35 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
     try {
-        const result = await pool.query(`SELECT 
-                        t.fullname AS tenant_name,
-                        r.room_number AS room_number,
-                        l.start_date,
-                        l.end_date,
-                        l.monthly_rent,
-                        l.electricity_rate_per_unit,
-                        l.water_rate_per_unit,
-                        CASE
-                            WHEN l.end_date < CURRENT_DATE THEN 'expired'
-                            ELSE l.status
-                        END AS current_status,
-                        l.created_at
-                        FROM leases l
-                        JOIN tenants t ON t.id = l.tenant_id
-                        JOIN rooms r ON r.id = l.room_id
-                        ORDER BY room_number ASC
-             `)
-        const leases = result.rows;
-        return NextResponse.json({ message: "Successfully loaded all the leases!", leases }, { status: 200 })
+        //Terminate any expired leases
+        await pool.query(`
+        UPDATE leases 
+        SET status = 'inactive' 
+        WHERE status = 'active' 
+        AND end_date < CURRENT_DATE
+        `);
+
+        const result = await pool.query(`
+            SELECT	l.id,
+            r.room_number,
+            t.fullname,
+            t.id_number,
+            t.phone_number,
+            l.monthly_rent,
+            l.start_date,
+            l.end_date,
+            l.electricity_rate_per_unit,
+            l.water_rate_per_unit,
+            l.created_at,
+            l.status
+            FROM 
+            leases l
+            JOIN rooms r ON r.id = l.room_id
+            JOIN tenants t ON t.id = l.tenant_id
+            ORDER BY room_number, status ASC
+        `)
+
+        return NextResponse.json(result.rows)
     } catch (err) {
         return NextResponse.json({ message: "Failed to load the datas!" }, { status: 409 })
     }
