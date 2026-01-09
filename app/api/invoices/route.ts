@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import pool from "@/database/db";
+import { checkingTenant } from "@/lib/checkingTenant";
 
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const mode = searchParams.get('mode');
+	const tenantId = searchParams.get('tenantId');
 
 	if (mode === 'billing') {
 		try {
@@ -47,6 +49,41 @@ export async function GET(request: Request) {
 		}
 	}
 
+	if (tenantId !== null) {
+		try {
+			if (!tenantId.trim()) return NextResponse.json({ message: "ID cannot be empty" }, { status: 400 })
+			if (isNaN(Number(tenantId))) return NextResponse.json({ message: "Invalid ID format" }, { status: 400 })
+			if (Number(tenantId) <= 0) return NextResponse.json({ message: "ID must be a positive number" }, { status: 400 })
+			const { error } = await checkingTenant(tenantId);
+			if (error) return error;
+			const id = Number(tenantId);
+			const result = await pool.query(`
+										SELECT i.id,
+										t.fullname,
+										r.room_number,
+										l.electricity_rate_per_unit,
+										i.electricity_units_used,
+										i.electricity_amount,
+										l.water_rate_per_unit,
+										i.water_units_used,
+										i.water_amount,
+										i.monthly_rent,
+										i.total_amount,
+										i.billing_month,
+										i.status,
+										COALESCE(i.paid_at, null) AS paid_at
+										FROM invoices i
+										JOIN leases l on l.id = i.lease_id
+										JOIN tenants t on t.id = l.tenant_id
+										JOIN rooms r on r.id = l.room_id
+										WHERE t.id = $1
+												`, [id])
+			return NextResponse.json(result.rows)
+		} catch (err) {
+			return NextResponse.json({ message: "Invalid or empty JSON body" }, { status: 400 })
+		}
+	}
+
 	try {
 		const result = await pool.query(`
             SELECT  i.id,
@@ -57,6 +94,7 @@ export async function GET(request: Request) {
 	   i.water_units_used,
 	   l.water_rate_per_unit,
 	   i.monthly_rent,
+	   i.billing_month,
 	   i.total_amount,
 	   i.status,
 	   i.paid_at

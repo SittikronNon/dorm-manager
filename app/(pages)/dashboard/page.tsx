@@ -8,7 +8,7 @@ export default function Page() {
     <div>
       <div className="flex justify-between m-5">
         <h1 className="text-2xl font-semibold">Dashboard / Overview</h1>
-        <button className="bg-indigo-500 px-4">New Invoices</button>
+        <button className="bg-rose-300 rounded-2xl p-4 shadow-md text-lg font-semibold border-b border-rose-100 hover:scale-105 transition duration-150 cursor-pointer">New Invoices</button>
       </div>
 
       <div className="grid grid-rows-2 grid-cols-4 h-dvh gap-6 mx-2">

@@ -54,7 +54,12 @@ export async function GET(request: Request) {
             leases l
             JOIN rooms r ON r.id = l.room_id
             JOIN tenants t ON t.id = l.tenant_id
-            ORDER BY room_number, status ASC
+            ORDER BY CASE
+                        WHEN l.status = 'active' THEN 1
+                        WHEN l.status = 'inactive' THEN 2
+                        ELSE 3
+                    END ASC,
+                    r.room_number ASC
         `)
 
         return NextResponse.json(result.rows)

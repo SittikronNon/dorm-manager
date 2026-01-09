@@ -15,6 +15,7 @@ interface InvoiceData {
     water_rate_per_unit: number;
     monthly_rent: number;
     total_amount: number;
+    billing_month: string;
     status: string;
     paid_at: string;
 }
@@ -33,18 +34,20 @@ export default function Page() {
             try {
                 setLoading(true);
                 const res = await fetch('/api/invoices')
-
-
+                if(res.status === 404) {
+                    setIsFound(false)
+                    return;
+                }
                 if (!res.ok) throw new Error(`Failed to fetch data with status: ${res.status}`);
 
                 const data = await res.json();
                 setInvoices(data);
-
+                setIsFound(true)
             } catch (err) {
                 console.error("Failed to fetch data from API", err);
             } finally {
                 setLoading(false);
-                setIsFound(true)
+
             }
         }
         fetchTenant();
@@ -91,6 +94,7 @@ export default function Page() {
                             <th className="text-gray-600 text-md px-4 py-3 font-semibold">Water Used</th>
                             <th className="text-gray-600 text-md px-4 py-3 font-semibold">Monthly Rent</th>
                             <th className="text-gray-600 text-md px-4 py-3 font-semibold">Total Amount</th>
+                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Billing Month</th>
                             <th className="text-gray-600 text-md px-4 py-3 font-semibold">Paid At</th>
                             <th className="text-gray-600 text-md px-4 py-3 font-semibold">Status</th>
                         </tr>
@@ -109,6 +113,7 @@ export default function Page() {
                                 <td className="px-4 py-3">{invoice.water_units_used}</td>
                                 <td className="px-4 py-3">{invoice.monthly_rent}</td>
                                 <td className="px-4 py-3">{invoice.total_amount}</td>
+                                <td className="px-4 py-3">{dateFormatter(invoice.billing_month)}</td>
                                 <td className="px-4 py-3">{dateFormatter(invoice.paid_at)}</td>
                                 <td className="px-4 py-3 text-bold text-center align-middle">
                                     <span className={`inline-block w-20 text-sm rounded-full ${invoice.status === 'paid' ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600'}`}>

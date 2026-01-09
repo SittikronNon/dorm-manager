@@ -1,7 +1,31 @@
 import pool from "@/database/db";
+import { checkingTenant } from "@/lib/checkingTenant";
 import { NextResponse } from "next/server";
 
+
 export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const tenantId = searchParams.get('id');
+
+    if (tenantId !== null) {
+        try {
+            const { error } = await checkingTenant(tenantId);
+            if (error) return error;
+            const id = Number(tenantId);
+            const result = await pool.query(`
+                        SELECT  fullname,
+                                phone_number,
+                                id_number
+                                FROM tenants
+                                WHERE is_active = true
+                                AND id = $1
+                `, [id])
+                return NextResponse.json(result.rows[0])
+        } catch (err) {
+            return NextResponse.json({ message: 'Failed to get tenant data' })
+        }
+    }
+
     try {
         const result = await pool.query(`
             SELECT id,
@@ -15,7 +39,7 @@ export async function GET(request: Request) {
         return NextResponse.json(result.rows)
 
     } catch (err) {
-        return NextResponse.json({ message: 'Failed to get the Rooms data' }, { status: 409 })
+        return NextResponse.json({ message: 'Failed to get the tenant data' }, { status: 409 })
     }
 }
 

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react"
 
@@ -28,7 +29,7 @@ export default function Page() {
                 }
 
                 if (!res.ok) throw new Error(`Failed to fetch data with status: ${res.status}`);
-                
+
                 const data = await res.json();
                 setTenants(data);
 
@@ -41,6 +42,15 @@ export default function Page() {
         }
         fetchTenant();
     }, [])
+
+    function handleEdit(id: number) {
+        if (!id) {
+            alert("No ID provided")
+            return;
+        }
+
+        router.push(`/tenants/${id}`)
+    }
 
     if (loading) {
         return (
@@ -58,7 +68,7 @@ export default function Page() {
             <div className="flex flex-col justify-center items-center min-h-screen p-10 text-center">
                 <h2 className="text-2xl font-bold">Tenant Not Found</h2>
                 <p>The tenant you are looking for does not exist.</p>
-                <button onClick={() => { router.push('/dashboard') }} className="text-blue-500 underline cursor-pointer">Back to List</button>
+                <Link href='/dashboard' className="text-blue-500 underline cursor-pointer">Back to List</Link>
             </div>
         );
     }
@@ -66,8 +76,10 @@ export default function Page() {
 
     return (
         <div className="min-h-screen m-4">
-            <h1>List of tenants</h1>
-            <button>+ Add Tenant</button>
+            <div className="flex border-b border-slate-400/50 pb-4 mb-4 px-4">
+                <h1 className="text-gray-500 font-medium text-2xl">List of tenants</h1>
+                <Link href='/tenants/create' className="ml-auto bg-green-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-green-600 hover:text-white cursor-pointer">+ Add Tenant</Link>
+            </div>
             <div className="bg-white p-6 rounded-xl border-l-8 border-green-500 shadow-sm col-span-2 min-h-96">
                 <table className="w-full mt-2 border-slate-200 border-collapse">
                     <thead>
@@ -75,19 +87,23 @@ export default function Page() {
                             <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Fullname</th>
                             <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Phone Number</th>
                             <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">ID number</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">
-                                View Lease
-                            </th>
+                            <th className="text-center text-gray-600 text-md px-4 py-3 font-semibold">Edit</th>
+                            <th className="text-center text-gray-600 text-md px-4 py-3 font-semibold">View Lease</th>
                         </tr>
                     </thead>
                     <tbody>
                         {tenants.map((tenant) => (
-                            <tr key={tenant.id} className="hover:bg-blue-600/60 odd:bg-white even:bg-slate-100 cursor-pointer transition-colors">
+                            <tr key={tenant.id} className="hover:bg-blue-600/60 odd:bg-white even:bg-slate-100 transition-colors">
                                 <td className="px-4 py-3">{tenant.fullname}</td>
                                 <td className="px-4 py-3">{tenant.phone_number}</td>
                                 <td className="px-4 py-3">{tenant.id_number}</td>
-                                <td className="px-4 py-3">
-                                    <button className="bg-amber-300 p-2 rounded-md">VIEW</button>
+                                <td className="px-4 py-3 text-center">
+                                    <button className="bg-orange-300 p-2 shadow-md rounded-md w-20 cursor-pointer hover:bg-orange-400 transition" onClick={() => handleEdit(tenant.id)}>
+                                        EDIT
+                                    </button>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    <button className="bg-amber-300 py-2 shadow-md rounded-md w-20 cursor-pointer hover:bg-amber-400 transition">VIEW</button>
                                 </td>
                             </tr>
                         ))}
