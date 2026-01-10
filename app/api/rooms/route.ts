@@ -3,10 +3,12 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const onlyAvailable = searchParams.get('available');
-    if (onlyAvailable === 'true') {
+    const onlyAvailable = searchParams.has('available');
+    if (onlyAvailable) {
         try {
-            const result = await pool.query(`SELECT *
+            const result = await pool.query(`SELECT id,
+                                                    room_number,
+                                                    monthly_rent
                                                     FROM rooms
                                                     WHERE is_available = true
                                                     ORDER BY room_number ASC

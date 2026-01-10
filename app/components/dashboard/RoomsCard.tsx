@@ -15,7 +15,7 @@ const RoomsCard = () => {
   useEffect(() => {
     const fetchAvaiRooms = async () => {
       try {
-        const res = await fetch('/api/rooms?available=true');
+        const res = await fetch('/api/rooms?available');
         if (!res.ok) throw new Error('Failed to fetch the data');
         const data = await res.json();
         console.log(data)

@@ -6,6 +6,19 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const tenantId = searchParams.get('id');
+    const noLeaseTenants = searchParams.has('noLease')
+
+    if (noLeaseTenants) {
+        const result = await pool.query(`
+                        SELECT 	t.id AS tenant_id,
+                                t.fullname
+                                FROM tenants t
+                                LEFT JOIN leases l ON t.id = l.tenant_id AND l.status = 'active'
+                                WHERE l.id IS NULL
+                                AND t.is_active = true
+            `);
+        return NextResponse.json(result.rows)
+    }
 
     if (tenantId !== null) {
         try {
@@ -20,7 +33,7 @@ export async function GET(request: Request) {
                                 WHERE is_active = true
                                 AND id = $1
                 `, [id])
-                return NextResponse.json(result.rows[0])
+            return NextResponse.json(result.rows[0])
         } catch (err) {
             return NextResponse.json({ message: 'Failed to get tenant data' })
         }

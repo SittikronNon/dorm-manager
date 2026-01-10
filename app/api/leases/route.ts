@@ -6,6 +6,7 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const onlyExpiring = searchParams.get('expiring');
+        const noLeaseTenants = searchParams.get('noLease');
         //Terminate any expired leases
         await pool.query(`
             WITH expired_leases AS (
@@ -19,6 +20,8 @@ export async function GET(request: Request) {
             SET is_available = true
             WHERE id IN (SELECT room_id FROM expired_leases)
         `);
+
+        
 
         if(onlyExpiring === "true") {
             const result  = await pool.query(`
