@@ -132,11 +132,12 @@ export default function Page() {
                 water_amount: result.waterAmount,
                 total_amount: result.totalAmount,
                 billing_month: inputData.billingMonth,
-                electricity_reading: recordReading.elec,
-                water_reading: recordReading.water,
+                electricity_reading: Number(recordReading.elec),
+                water_reading: Number(recordReading.water),
                 lease_id: bill.lease_id
             }
         })
+
 
         const res = await fetch('/api/invoices/', {
             method: 'POST',
@@ -144,9 +145,12 @@ export default function Page() {
             body: JSON.stringify(formData)
         })
 
-        if(res.ok) {
+        if (res.ok) {
             router.push('/invoices');
             router.refresh();
+        } else {
+            setIsSubmitting(false); // Let her try again
+            alert("Something went wrong. Please check your connection.");
         }
     }
 
@@ -211,11 +215,11 @@ export default function Page() {
                                     <td className="py-3 px-4 min-w-40">{bill.fullname}</td>
                                     <td className="py-3 px-4 text-center">{bill.electricity_rate_per_unit}</td>
                                     <td className="py-3 px-4 text-center">{bill.prev_electricity_reading}</td>
-                                    <td className="py-3 px-4 text-center"><input type="number" className="border" name="elecUsed" value={rowData.elec} onChange={(e) => { handleReadingChange(bill.lease_id, 'elec', e.target.value) }} /></td>
+                                    <td className="py-3 px-4 text-center"><input type="number" className="border" name="elecUsed" value={rowData.elec} onChange={(e) => { handleReadingChange(bill.lease_id, 'elec', e.target.value) }} required /></td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.elecAmount}</td>
                                     <td className="py-3 px-4 text-center">{bill.water_rate_per_unit}</td>
                                     <td className="py-3 px-4 text-center">{bill.prev_water_reading}</td>
-                                    <td className="py-3 px-4 text-center"><input type="number" className="border" value={rowData.water} onChange={(e) => { handleReadingChange(bill.lease_id, 'water', e.target.value) }} /></td>
+                                    <td className="py-3 px-4 text-center"><input type="number" className="border" value={rowData.water} onChange={(e) => { handleReadingChange(bill.lease_id, 'water', e.target.value) }} required /></td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.waterAmount}</td>
                                     <td className="py-3 px-4 text-center">{bill.monthly_rent}</td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.totalAmount}</td>

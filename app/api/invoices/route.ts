@@ -151,10 +151,21 @@ export async function POST(request: Request) {
                        monthly_rent,
                        total_amount,
                        billing_month,
+					   electricity_reading,
+					   water_reading,
                        lease_id
                 )
 					   SELECT * FROM UNNEST (
-					   		$1::numeric[],  $2::numeric[],  $3::numeric[], $4::numeric[], $5::numeric[], $6::numeric[], $7::date[], $8::integer[]
+					   		$1::numeric[],
+							$2::numeric[],
+							$3::numeric[],
+							$4::numeric[],
+							$5::numeric[],
+							$6::numeric[],
+							$7::date[],
+							$8::numeric[],
+							$9::numeric[],
+							$10::integer[]
 					   )
 			`;
 		const params = [
@@ -165,6 +176,8 @@ export async function POST(request: Request) {
 			invoices.map(i => i.monthly_rent),
 			invoices.map(i => i.total_amount),
 			invoices.map(i => i.billing_month),
+			invoices.map(i => i.electricity_reading),
+			invoices.map(i => i.water_reading),
 			invoices.map(i => i.lease_id)
 		]
 
