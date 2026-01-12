@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react"
 import { dateFormatter } from "@/lib/formatter";
+import Link from "next/link";
 
 
 interface InvoiceData {
@@ -77,8 +78,10 @@ export default function Page() {
 
     return (
         <div className="min-h-screen m-4">
-            <h1>List of tenants</h1>
-            <button>+ Add Tenant</button>
+            <div className="flex border-b border-slate-400/50 pb-4 mb-4 px-4">
+                <h1 className="text-gray-500 font-medium text-2xl">List of Leases</h1>
+                <Link href='/invoices/create' className="ml-auto bg-green-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-green-600 hover:text-white cursor-pointer">+ Add Invoices</Link>
+            </div>
             <div className="bg-white p-6 rounded-xl border-l-8 border-red-500 shadow-sm col-span-2 min-h-96">
                 <table className="w-full mt-2 border-slate-200 border-collapse">
                     <thead>

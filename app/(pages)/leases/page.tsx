@@ -15,6 +15,8 @@ interface LeasesData {
     end_date: string;
     electricity_rate_per_unit: number;
     water_rate_per_unit: number;
+    start_electricity_reading: number;
+    start_water_reading: number;
     created_at: string,
     status: string;
 }
@@ -86,13 +88,15 @@ export default function Page() {
                             <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">end date</th>
                             <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">electricity rate </th>
                             <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">water rate </th>
+                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Start Electricity Reading</th>
+                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Start Water Reading</th>
                             <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">created at </th>
                             <th className=" text-gray-600 text-md px-4 py-3 font-semibold">status </th>
                         </tr>
                     </thead>
                     <tbody>
                         {leases.map((lease) => (
-                            <tr key={lease.id} className="hover:bg-blue-600/60 odd:bg-white even:bg-slate-100 cursor-pointer transition-colors">
+                            <tr key={lease.id} className={`hover:bg-blue-600/60 ${lease.status === 'active' ? 'odd:bg-white even:bg-slate-100' : 'line-through text-gray-500 bg-gray-100'} cursor-pointer transition-colors`}>
                                 <td className="text-sm px-4 py-3">{lease.room_number}</td>
                                 <td className="text-sm px-4 py-3">{lease.fullname}</td>
                                 <td className="text-sm px-4 py-3">{lease.id_number}</td>
@@ -102,6 +106,8 @@ export default function Page() {
                                 <td className="text-sm px-4 py-3">{dateFormatter(lease.end_date)}</td>
                                 <td className="text-sm px-4 py-3">{lease.electricity_rate_per_unit}</td>
                                 <td className="text-sm px-4 py-3">{lease.water_rate_per_unit}</td>
+                                <td className="text-sm px-4 py-3">{lease.start_electricity_reading}</td>
+                                <td className="text-sm px-4 py-3">{lease.start_water_reading}</td>
                                 <td className="text-sm px-4 py-3">{dateFormatter(lease.created_at)}</td>
                                 <td className="text-sm px-4 py-3 text-bold text-center align-middle">
                                     <span className={`inline-block rounded-full w-20 ${lease.status === 'active' ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600'}`}>

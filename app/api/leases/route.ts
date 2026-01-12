@@ -6,7 +6,6 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const onlyExpiring = searchParams.get('expiring');
-        const noLeaseTenants = searchParams.get('noLease');
         //Terminate any expired leases
         await pool.query(`
             WITH expired_leases AS (
@@ -21,10 +20,10 @@ export async function GET(request: Request) {
             WHERE id IN (SELECT room_id FROM expired_leases)
         `);
 
-        
 
-        if(onlyExpiring === "true") {
-            const result  = await pool.query(`
+
+        if (onlyExpiring === "true") {
+            const result = await pool.query(`
                 SELECT	l.id,
                 r.room_number,
                 t.fullname,
@@ -37,7 +36,7 @@ export async function GET(request: Request) {
                 AND DATE_TRUNC('month', l.end_date) = DATE_TRUNC('month', CURRENT_DATE)
                 `)
 
-                return NextResponse.json(result.rows);
+            return NextResponse.json(result.rows);
         }
 
         const result = await pool.query(`
@@ -52,6 +51,8 @@ export async function GET(request: Request) {
             l.electricity_rate_per_unit,
             l.water_rate_per_unit,
             l.created_at,
+            l.start_electricity_reading,
+            l.start_water_reading,
             l.status
             FROM 
             leases l
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-    const { start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id } = await request.json();
+    const { start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id, start_electricity_reading, start_water_reading } = await request.json();
     if (!start_date || !end_date || !monthly_rent || !electricity_rate_per_unit || !water_rate_per_unit || !tenant_id || !room_id) return NextResponse.json({ message: "Please fill all of the data!" }, { status: 409 })
     if (new Date(start_date) >= new Date(end_date)) return NextResponse.json({ message: 'Start date must be lower than end date' }, { status: 400 });
     if (monthly_rent <= 0) return NextResponse.json({ mseeage: "The number must be a positive number" }, { status: 400 })
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
         if (roomCheck.rows.length === 0) return NextResponse.json({ message: 'The room is not found' }, { status: 404 })
         if (roomCheck.rows[0].is_available !== true) return NextResponse.json({ message: 'The room is currently occupied' }, { status: 400 })
 
-        await client.query(`INSERT INTO leases (start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`, [start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id])
+        await client.query(`INSERT INTO leases (start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id, start_electricity_reading, start_water_reading) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id, start_electricity_reading, start_water_reading])
 
         await client.query(`
                 UPDATE rooms

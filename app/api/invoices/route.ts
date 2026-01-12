@@ -10,19 +10,26 @@ export async function GET(request: Request) {
 	if (mode === 'billing') {
 		try {
 			const result = await pool.query(`
-                SELECT
-                   t.fullname,
-                   r.room_number,
-                   l.monthly_rent,
-                   l.electricity_rate_per_unit,
-                   l.water_rate_per_unit
-                   FROM leases l
-                   JOIN tenants t ON t.id = l.tenant_id
-                   JOIN rooms r ON r.id = l.room_id
-                   WHERE l.status = 'active'
-                   ORDER BY r.room_number ASC
+                SELECT	l.id AS lease_id,
+		r.room_number,
+		t.fullname,
+		l.monthly_rent,
+		l.electricity_rate_per_unit,
+		l.water_rate_per_unit,
+		COALESCE(
+			(SELECT electricity_reading FROM invoices WHERE lease_id = l.id ORDER BY billing_month DESC LIMIT 1),
+			l.start_electricity_reading
+		) AS prev_electricity_reading,
+		COALESCE(
+			(SELECT water_reading FROM invoices WHERE lease_id = l.id ORDER BY billing_month DESC LIMIT 1),
+			l.start_water_reading
+		) AS prev_water_reading
+		FROM leases l
+		JOIN rooms r ON r.id = l.room_id
+		JOIN tenants t ON t.id = l.tenant_id
+		WHERE l.status = 'active'
             `)
-			return NextResponse.json({ templates: result.rows }, { status: 200 })
+			return NextResponse.json(result.rows)
 		} catch (err) {
 			return NextResponse.json({ message: "failed on the database side" }, { status: 500 })
 		}
