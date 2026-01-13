@@ -17,12 +17,24 @@ export async function GET(request: Request) {
 		l.electricity_rate_per_unit,
 		l.water_rate_per_unit,
 		COALESCE(
-			(SELECT electricity_reading FROM invoices WHERE lease_id = l.id ORDER BY billing_month DESC LIMIT 1),
-			l.start_electricity_reading
+			(
+				SELECT i2.electricity_reading 
+				FROM invoices i2
+				JOIN leases l2 ON l2.id = i2.lease_id
+				WHERE l2.room_id = l.room_id
+				ORDER BY i2.billing_month DESC
+				LIMIT 1),
+				l.start_electricity_reading
 		) AS prev_electricity_reading,
 		COALESCE(
-			(SELECT water_reading FROM invoices WHERE lease_id = l.id ORDER BY billing_month DESC LIMIT 1),
-			l.start_water_reading
+			(
+				SELECT i2.water_reading 
+				FROM invoices i2
+				JOIN leases l2 ON l2.id = i2.lease_id
+				WHERE l2.room_id = l.room_id
+				ORDER BY i2.billing_month DESC
+				LIMIT 1),
+				l.start_water_reading
 		) AS prev_water_reading
 		FROM leases l
 		JOIN rooms r ON r.id = l.room_id
@@ -203,7 +215,7 @@ export async function PATCH(request: Request) {
 		return NextResponse.json({ message: "Invalid or empty JSON body" }, { status: 400 })
 	}
 
-	const ids = Array.isArray(body) ? body : body.invoicesId || [];
+	const ids = Array.isArray(body) ? body : body.invoiceIds || [];
 
 	if (!Array.isArray(ids) || ids.length === 0) return NextResponse.json({ message: "No valid IDs provided" }, { status: 400 })
 
@@ -223,4 +235,43 @@ export async function PATCH(request: Request) {
 	} catch (err) {
 		return NextResponse.json({ message: "Failed on the database side" }, { status: 500 })
 	}
+}
+
+
+export async function DELETE(request: Request) {
+	let body;
+	try {
+		const bodyText = await request.text();
+
+		if (!bodyText || bodyText.trim() === "") return NextResponse.json({ message: "No data sent in body" }, { status: 400 })
+
+		body = JSON.parse(bodyText);
+
+
+
+	} catch (err) {
+		return NextResponse.json({ message: "Invalid or empty JSON body" }, { status: 400 })
+	}
+
+	const ids = Array.isArray(body) ? body : body.invoiceIds || [];
+	console.log(ids)
+
+	if (!Array.isArray(ids) || ids.length === 0) return NextResponse.json({ message: "No valid IDs provided" }, { status: 400 })
+
+	const hasInvalid = ids.some((id: string | number) => isNaN(Number(id)) || id === null);
+
+	if (hasInvalid) return NextResponse.json({ message: "Invalid type of ids! All must be number" });
+
+	try {
+		const query = `
+				DELETE FROM invoices
+				WHERE id = ANY($1::int[])
+		`
+		await pool.query(query, [ids]);
+		return NextResponse.json({ message: 'the Selected Ids has been deleted!' }, { status: 200 })
+	} catch (err) {
+		return NextResponse.json({ message: "Failed on the database side" }, { status: 500 })
+	}
+
+
 }

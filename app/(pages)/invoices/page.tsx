@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react"
+import { ChangeEvent, useEffect, useState } from "react"
 import { dateFormatter } from "@/lib/formatter";
 import Link from "next/link";
 
@@ -28,6 +28,7 @@ export default function Page() {
     const [invoices, setInvoices] = useState<InvoiceData[]>([]);
     const [isFound, setIsFound] = useState<boolean | undefined>();
     const [loading, setLoading] = useState<boolean>(true);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const router = useRouter();
 
     useEffect(() => {
@@ -35,7 +36,7 @@ export default function Page() {
             try {
                 setLoading(true);
                 const res = await fetch('/api/invoices')
-                if(res.status === 404) {
+                if (res.status === 404) {
                     setIsFound(false)
                     return;
                 }
@@ -53,6 +54,58 @@ export default function Page() {
         }
         fetchTenant();
     }, [])
+
+    function toggleSelection(id: number) {
+        setSelectedIds((prev) => (
+            prev.includes(id)
+                ? prev.filter((item) => item !== id)
+                : [...prev, id]
+        ))
+    }
+
+    function handleSelectedAll(event: ChangeEvent<HTMLInputElement>) {
+        if (event.target.checked) {
+            const selectedAll = invoices.map((invoice) => invoice.id)
+            setSelectedIds(selectedAll)
+        } else {
+            setSelectedIds([]);
+        }
+    }
+
+    async function handleMarkAsPaid() {
+        const res = await fetch('/api/invoices/', {
+            method: 'PATCH',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                invoiceIds: selectedIds
+            })
+        })
+        if (res.ok) {
+            setSelectedIds([]);
+            window.location.reload();
+        } else {
+            alert("Something went wrong. Please check your connection.");
+        }
+    }
+
+    async function handleDeleteSelected() {
+        if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} invoices?`)) {
+            return;
+        }
+        const res = await fetch('/api/invoices/', {
+            method: 'DELETE',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                invoiceIds: selectedIds
+            })
+        })
+        if (res.ok) {
+            setSelectedIds([]);
+            window.location.reload();
+        } else {
+            alert("Something went wrong. Please check your connection.");
+        }
+    }
 
     if (loading) {
         return (
@@ -79,15 +132,23 @@ export default function Page() {
     return (
         <div className="min-h-screen m-4">
             <div className="flex border-b border-slate-400/50 pb-4 mb-4 px-4">
-                <h1 className="text-gray-500 font-medium text-2xl">List of Leases</h1>
-                <Link href='/invoices/create' className="ml-auto bg-green-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-green-600 hover:text-white cursor-pointer">+ Add Invoices</Link>
+                <h1 className="text-gray-500 font-medium text-2xl">List of Invoices</h1>
+                <div className="ml-auto">
+                    <button onClick={handleMarkAsPaid} className={`mx-5 ${selectedIds.length === 0 ? 'bg-slate-400 cursor-not-allowed text-slate-200' : 'bg-green-300 cursor-pointer hover:bg-green-600 hover:text-white'} p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105  `}>Mark as paid</button>
+                    <button onClick={handleDeleteSelected} className={`mx-5 ${selectedIds.length === 0 ? 'bg-slate-400 cursor-not-allowed text-slate-200' : 'bg-red-300 cursor-pointer hover:bg-red-600 hover:text-white'} p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105  `}>Delete Selected</button>
+                    <Link href='/invoices/create' className="mx-5 bg-yellow-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-yellow-600 hover:text-white cursor-pointer">+ Add Invoices</Link>
+                </div>
             </div>
             <div className="bg-white p-6 rounded-xl border-l-8 border-red-500 shadow-sm col-span-2 min-h-96">
                 <table className="w-full mt-2 border-slate-200 border-collapse">
                     <thead>
                         <tr>
                             <th className="text-left py-3 px-4">
-                                <input type="checkbox" className="" />
+                                <input
+                                    type="checkbox"
+                                    className=""
+                                    onChange={handleSelectedAll}
+                                />
                             </th>
                             <th className="text-gray-600 text-md px-4 py-3 font-semibold">Room No.</th>
                             <th className="text-gray-600 text-md px-4 py-3 font-semibold">Fullname</th>
@@ -106,7 +167,11 @@ export default function Page() {
                         {invoices.map((invoice) => (
                             <tr key={invoice.id} className="hover:bg-blue-600/60 odd:bg-white even:bg-slate-100 cursor-pointer transition-colors">
                                 <td className="py-3 px-4">
-                                    <input type="checkbox" />
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.includes(invoice.id)}
+                                        onChange={() => toggleSelection(invoice.id)}
+                                    />
                                 </td>
                                 <td className="px-4 py-3">{invoice.room_number}</td>
                                 <td className="px-4 py-3">{invoice.fullname}</td>

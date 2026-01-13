@@ -50,8 +50,9 @@ function invoiceCalculation(bill: BillingData, currReadings: { elec: string; wat
 export default function Page() {
     const [inputData, setInputData] = useState({
         billingMonth: "",
-
     });
+
+    const [selecedIds, setSelectedIds] = useState<number[]>([])
 
     const [record, setRecord] = useState<Record<number, { elec: string; water: string }>>({});
     const router = useRouter();
@@ -92,10 +93,21 @@ export default function Page() {
 
 
 
+    function toggleSelection(id: number) {
+        setSelectedIds((prev) => (
+            prev.includes(id)
+                ? prev.filter((item) => item !== id)
+                : [...prev, id]
+        ))
+    }
 
-    async function handleSubmit(event: FormEvent) {
-        event.preventDefault();
-
+    function handleSelectedAll(event: ChangeEvent<HTMLInputElement>) {
+        if (event.target.checked) {
+            const selectedAll = billingInfo.map((bill) => bill.lease_id)
+            setSelectedIds(selectedAll)
+        } else {
+            setSelectedIds([]);
+        }
     }
 
     function handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -107,11 +119,12 @@ export default function Page() {
         }))
     }
 
+
     function handleReadingChange(leaseId: number, name: 'elec' | 'water', value: string) {
         setRecord((prev) => ({
             ...prev,
             [leaseId]: {
-                ... (prev[leaseId] || { elec: "", water: "" }),
+                ...(prev[leaseId] || { elec: "", water: "" }),
                 [name]: value
             }
         }))
@@ -119,24 +132,32 @@ export default function Page() {
 
     async function handleOnSubmit(event: FormEvent) {
         event.preventDefault();
-        setIsSubmitting(true);
-        const formData = billingInfo.map((bill) => {
-            const recordReading = record[bill.lease_id] || { elec: "", water: "" }
-            const result = invoiceCalculation(bill, recordReading)
 
-            return {
-                monthly_rent: bill.monthly_rent,
-                electricity_units_used: result.elecUsed,
-                electricity_amount: result.elecAmount,
-                water_units_used: result.waterUsed,
-                water_amount: result.waterAmount,
-                total_amount: result.totalAmount,
-                billing_month: inputData.billingMonth,
-                electricity_reading: Number(recordReading.elec),
-                water_reading: Number(recordReading.water),
-                lease_id: bill.lease_id
-            }
-        })
+        setIsSubmitting(true);
+        const formData = billingInfo
+            .filter((item) => selecedIds.includes(item.lease_id))
+            .map((bill) => {
+                const recordReading = record[bill.lease_id] || { elec: "", water: "" }
+                const result = invoiceCalculation(bill, recordReading)
+
+                return {
+                    monthly_rent: bill.monthly_rent,
+                    electricity_units_used: result.elecUsed,
+                    electricity_amount: result.elecAmount,
+                    water_units_used: result.waterUsed,
+                    water_amount: result.waterAmount,
+                    total_amount: result.totalAmount,
+                    billing_month: inputData.billingMonth,
+                    electricity_reading: Number(recordReading.elec),
+                    water_reading: Number(recordReading.water),
+                    lease_id: bill.lease_id
+                }
+            })
+
+        if (formData.length === 0) {
+            alert("Please select at lease one room to create an invoice.")
+            return;
+        }
 
 
         const res = await fetch('/api/invoices/', {
@@ -185,7 +206,7 @@ export default function Page() {
                     <thead>
                         <tr>
                             <th className="text-left py-3 px-4">
-                                <input type="checkbox" className="" />
+                                <input type="checkbox" className="" onChange={handleSelectedAll}/>
                             </th>
                             <th className="text-gray-600 text-sm px-4 py-3 font-semibold">Room No.</th>
                             <th className="text-gray-600 text-sm px-4 py-3 font-semibold">Fullname</th>
@@ -209,17 +230,17 @@ export default function Page() {
                             return (
                                 <tr key={bill.lease_id} className="hover:bg-blue-600/60 odd:bg-white even:bg-slate-100 cursor-pointer transition-colors">
                                     <td className="py-3 px-4">
-                                        <input type="checkbox" />
+                                        <input type="checkbox" checked={selecedIds.includes(bill.lease_id)} onChange={() => toggleSelection(bill.lease_id)} />
                                     </td>
                                     <td className="py-3 px-4">{bill.room_number}</td>
                                     <td className="py-3 px-4 min-w-40">{bill.fullname}</td>
                                     <td className="py-3 px-4 text-center">{bill.electricity_rate_per_unit}</td>
                                     <td className="py-3 px-4 text-center">{bill.prev_electricity_reading}</td>
-                                    <td className="py-3 px-4 text-center"><input type="number" className="border" name="elecUsed" value={rowData.elec} onChange={(e) => { handleReadingChange(bill.lease_id, 'elec', e.target.value) }} required /></td>
+                                    <td className="py-3 px-4 text-center"><input type="number" className="border" name="elecUsed" value={rowData.elec} onChange={(e) => { handleReadingChange(bill.lease_id, 'elec', e.target.value) }}  /></td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.elecAmount}</td>
                                     <td className="py-3 px-4 text-center">{bill.water_rate_per_unit}</td>
                                     <td className="py-3 px-4 text-center">{bill.prev_water_reading}</td>
-                                    <td className="py-3 px-4 text-center"><input type="number" className="border" value={rowData.water} onChange={(e) => { handleReadingChange(bill.lease_id, 'water', e.target.value) }} required /></td>
+                                    <td className="py-3 px-4 text-center"><input type="number" className="border" value={rowData.water} onChange={(e) => { handleReadingChange(bill.lease_id, 'water', e.target.value) }}  /></td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.waterAmount}</td>
                                     <td className="py-3 px-4 text-center">{bill.monthly_rent}</td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.totalAmount}</td>

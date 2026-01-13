@@ -19,7 +19,7 @@ export default function Page() {
     const [rooms, setRooms] = useState<RoomData[]>([])
     const [isTenantsFound, setIsTenantsFound] = useState<boolean | undefined>(undefined)
     const [isRoomsFound, setIsRoomsFound] = useState<boolean | undefined>(undefined)
-
+    const [loading, setLoading] = useState<boolean>(true);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const router = useRouter();
 
@@ -40,33 +40,40 @@ export default function Page() {
 
     useEffect(() => {
         const loadPageData = async () => {
-            const [tenantsRes, roomsRes] = await Promise.all([
-                fetch(`/api/tenants?noLease`),
-                fetch(`/api/rooms?available`)
-            ])
-            if (!tenantsRes.ok) setIsTenantsFound(false);
-            if (!roomsRes.ok) setIsRoomsFound(false);
+            try {
+                const [tenantsRes, roomsRes] = await Promise.all([
+                    fetch(`/api/tenants?noLease`),
+                    fetch(`/api/rooms?available`)
+                ])
+                if (!tenantsRes.ok) setIsTenantsFound(false);
+                if (!roomsRes.ok) setIsRoomsFound(false);
 
-            if (!tenantsRes.ok || !roomsRes.ok) throw new Error(`Failed to fetch data with status:`);
+                if (!tenantsRes.ok || !roomsRes.ok) throw new Error(`Failed to fetch data with status:`);
 
-            const tenantsData = await tenantsRes.json();
-            const roomsData = await roomsRes.json();
+                const tenantsData = await tenantsRes.json();
+                const roomsData = await roomsRes.json();
 
-            if (!tenantsData || tenantsData.length === 0) {
-                setIsTenantsFound(false);
-                return;
+                if (!tenantsData || tenantsData.length === 0) {
+                    setIsTenantsFound(false);
+                    return;
+                }
+
+                if (!roomsData || roomsData.length === 0) {
+                    setIsRoomsFound(false);
+                    return;
+                }
+
+
+                setTenants(tenantsData)
+                setIsTenantsFound(true)
+                setRooms(roomsData);
+                setIsRoomsFound(true);
+            } catch (err) {
+                console.error("Failed to fetch data from API", err);
+            } finally {
+                setLoading(false);
             }
 
-            if (!roomsData || roomsData.length === 0) {
-                setIsRoomsFound(false);
-                return;
-            }
-
-
-            setTenants(tenantsData)
-            setIsTenantsFound(true)
-            setRooms(roomsData);
-            setIsRoomsFound(true);
         }
 
         loadPageData();
@@ -110,6 +117,30 @@ export default function Page() {
 
             return nextState;
         })
+    }
+
+    if (!isTenantsFound) {
+        return (
+            <div className=" min-h-screen flex flex-col justify-center items-center gap-2 p-6 bg-slate-100">
+                <h3 className="text-gray-500 font-medium text-2xl">No tenants found</h3>
+                <div className="flex flex-col justify-center items-center p-10 text-center h-full">
+                    <h2 className="text-2xl font-bold">No Tenants!</h2>
+                    <p>Please create a new tenant.</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!isRoomsFound) {
+        return (
+            <div className=" min-h-screen flex flex-col justify-center items-center gap-2 p-6 bg-slate-100">
+                <h3 className="text-gray-500 font-medium text-2xl">No rooms found</h3>
+                <div className="flex flex-col justify-center items-center p-10 text-center h-full">
+                    <h2 className="text-2xl font-bold">No Rooms Available!</h2>
+                    <p>Please make sure that rooms is available.</p>
+                </div>
+            </div>
+        )
     }
 
 

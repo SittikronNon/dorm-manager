@@ -25,15 +25,15 @@ const Sidebar = () => {
         }
     }
     return (
-        <div className=' bg-indigo-100 w-64 h-dvh flex flex-col sticky top-0 text-center'>
-            <Link href='/' className='text-3xl cursor-pointer hover:bg-amber-100 font-semibold border-b border-indigo-300/50 py-6 transition duration-150' >Wanna House</Link>
+        <div className=' bg-linear-65 from-slate-700 to-zinc-800 w-64 h-dvh flex flex-col sticky top-0 text-center'>
+            <Link href='/' className='text-3xl cursor-pointer hover:bg-stone-400 font-semibold border-b border-indigo-300/50 py-6 transition duration-150 text-white' >Wanna House</Link>
             <nav className='flex flex-col mt-6 gap-6'>
                 <ul>
                     {navLinks.map((link) => {
                         const isActive = pathname === link.path || (pathname.startsWith(link.path) && link.path !== "/");
                         return (
-                            <li key={link.name} className={`hover:bg-amber-100 transition duration-100 cursor-pointer active:bg-amber-300 ${ isActive ? 'bg-red-500' : ''} `}>
-                                <Link className={`block py-4 px-12 w-full h-full active:scale-95`} href={link.path}>{link.name}</Link>
+                            <li key={link.name} className={`hover:bg-stone-400 transition duration-100 cursor-pointer active:bg-zinc-300  ${ isActive ? 'bg-zinc-500' : ''} `}>
+                                <Link className={`block py-4 px-12 w-full h-full active:scale-95 font-semibold text-lg text-white active:text-black transition-colors`} href={link.path}>{link.name}</Link>
                             </li>
                         )
                     })}
