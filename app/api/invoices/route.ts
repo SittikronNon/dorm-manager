@@ -6,6 +6,7 @@ export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const mode = searchParams.get('mode');
 	const tenantId = searchParams.get('tenantId');
+	const billingMonth = searchParams.get('month');
 
 	if (mode === 'billing') {
 		try {
@@ -103,6 +104,42 @@ export async function GET(request: Request) {
 		}
 	}
 
+	if (billingMonth) {
+		try {
+			const result = await pool.query(`
+            SELECT  i.id,
+			r.room_number AS room_number,
+	   t.fullname,
+	   i.electricity_units_used,
+	   l.electricity_rate_per_unit,
+	   i.water_units_used,
+	   l.water_rate_per_unit,
+	   i.monthly_rent,
+	   i.electricity_reading,
+	   i.water_reading,
+	   i.billing_month,
+	   i.total_amount,
+	   i.status,
+	   i.paid_at
+	   FROM invoices i
+	   JOIN leases l ON l.id = i.lease_id
+	   JOIN rooms r ON r.id = l.room_id
+	   JOIN tenants t ON t.id = l.tenant_id
+	   WHERE i.billing_month = $1
+	   ORDER BY CASE
+					WHEN i.status = 'unpaid' THEN 1
+					WHEN i.status = 'paid' THEN 2
+					ELSE 3
+				END ASC,
+				room_number ASC
+						   `, [billingMonth])
+		return NextResponse.json(result.rows)
+		} catch (err) {
+			return NextResponse.json({ message: "Invalid or empty JSON body" }, { status: 400 })
+		}
+	}
+
+	//Showing all invoices
 	try {
 		const result = await pool.query(`
             SELECT  i.id,
@@ -113,6 +150,8 @@ export async function GET(request: Request) {
 	   i.water_units_used,
 	   l.water_rate_per_unit,
 	   i.monthly_rent,
+	   i.electricity_reading,
+	   i.water_reading,
 	   i.billing_month,
 	   i.total_amount,
 	   i.status,
