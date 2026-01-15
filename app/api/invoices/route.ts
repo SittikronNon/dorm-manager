@@ -7,8 +7,23 @@ export async function GET(request: Request) {
 	const mode = searchParams.get('mode');
 	const tenantId = searchParams.get('tenantId');
 	const billingMonth = searchParams.get('month');
+	const getYears = searchParams.has('years');
+	const createBilling = searchParams.get('billing');
 
-	if (mode === 'billing') {
+	if (getYears) {
+		try {
+			const result = await pool.query(`
+						SELECT	DISTINCT EXTRACT(YEAR FROM billing_month) as year
+								FROM invoices
+								ORDER BY year DESC
+			`)
+			return NextResponse.json(result.rows)
+		} catch (err) {
+			return NextResponse.json({ message: "failed on the database side" }, { status: 500 })
+		}
+	}
+
+	if (createBilling) {
 		try {
 			const result = await pool.query(`
                 SELECT	l.id AS lease_id,
@@ -23,6 +38,7 @@ export async function GET(request: Request) {
 				FROM invoices i2
 				JOIN leases l2 ON l2.id = i2.lease_id
 				WHERE l2.room_id = l.room_id
+				AND i2.billing_month < $1
 				ORDER BY i2.billing_month DESC
 				LIMIT 1),
 				l.start_electricity_reading
@@ -33,6 +49,7 @@ export async function GET(request: Request) {
 				FROM invoices i2
 				JOIN leases l2 ON l2.id = i2.lease_id
 				WHERE l2.room_id = l.room_id
+				AND i2.billing_month < $1
 				ORDER BY i2.billing_month DESC
 				LIMIT 1),
 				l.start_water_reading
@@ -41,7 +58,7 @@ export async function GET(request: Request) {
 		JOIN rooms r ON r.id = l.room_id
 		JOIN tenants t ON t.id = l.tenant_id
 		WHERE l.status = 'active'
-            `)
+            `, [createBilling])
 			return NextResponse.json(result.rows)
 		} catch (err) {
 			return NextResponse.json({ message: "failed on the database side" }, { status: 500 })
@@ -133,7 +150,7 @@ export async function GET(request: Request) {
 				END ASC,
 				room_number ASC
 						   `, [billingMonth])
-		return NextResponse.json(result.rows)
+			return NextResponse.json(result.rows)
 		} catch (err) {
 			return NextResponse.json({ message: "Invalid or empty JSON body" }, { status: 400 })
 		}

@@ -22,6 +22,22 @@ interface CalcResult {
     totalAmount: number;
 }
 
+interface SelectedDate {
+    selectedYear: string;
+    selectedMonth: string;
+}
+
+const currentYear = new Date().getFullYear();
+
+const creationYears = [currentYear - 1, currentYear, currentYear + 1];
+const months = [
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+];
+
+const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
+
+
 
 
 function invoiceCalculation(bill: BillingData, currReadings: { elec: string; water: string; }): CalcResult {
@@ -47,9 +63,14 @@ function invoiceCalculation(bill: BillingData, currReadings: { elec: string; wat
 
 
 
+
 export default function Page() {
-    const [inputData, setInputData] = useState({
-        billingMonth: "",
+
+
+    const [billingMonth, setBillingMonth] = useState<string>(`${currentYear}-${currentMonth}-01`);
+    const [selectedDate, setSelectedDate] = useState<SelectedDate>({
+        selectedYear: String(currentYear),
+        selectedMonth: `${currentMonth}`
     });
 
     const [selecedIds, setSelectedIds] = useState<number[]>([])
@@ -57,7 +78,7 @@ export default function Page() {
     const [record, setRecord] = useState<Record<number, { elec: string; water: string }>>({});
     const router = useRouter();
 
-    const isFormInValid = !inputData.billingMonth
+    const isFormInValid = selecedIds.length === 0;
 
     const [isFound, setIsFound] = useState<boolean | undefined>();
     const [loading, setLoading] = useState<boolean>(true);
@@ -65,11 +86,13 @@ export default function Page() {
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const [billingInfo, setBillingInfo] = useState<BillingData[]>([]);
 
+
+
     useEffect(() => {
         const fetchBillingInfo = async () => {
             try {
                 setLoading(true);
-                const res = await fetch('/api/invoices?mode=billing')
+                const res = await fetch(`/api/invoices?billing=${billingMonth}`)
                 if (res.status === 404) {
                     setIsFound(false)
                     return;
@@ -89,7 +112,7 @@ export default function Page() {
         }
 
         fetchBillingInfo();
-    }, [])
+    }, [billingMonth])
 
 
 
@@ -110,13 +133,21 @@ export default function Page() {
         }
     }
 
-    function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    function handleChange(event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
         const { name, value } = event.target;
-
-        setInputData((prev) => ({
+        setSelectedDate((prev) => ({
             ...prev,
             [name]: value
         }))
+        const selectedYear = name === 'selectedYear' ? value : selectedDate.selectedYear;
+        const selectedMonth = name === 'selectedMonth' ? value : selectedDate.selectedMonth;
+        const newDateString = `${selectedYear}-${selectedMonth}-01`
+
+        setBillingMonth(newDateString);
+
+        router.push(`/invoices/create?billing=${newDateString}`)
+
+
     }
 
 
@@ -147,7 +178,7 @@ export default function Page() {
                     water_units_used: result.waterUsed,
                     water_amount: result.waterAmount,
                     total_amount: result.totalAmount,
-                    billing_month: inputData.billingMonth,
+                    billing_month: billingMonth,
                     electricity_reading: Number(recordReading.elec),
                     water_reading: Number(recordReading.water),
                     lease_id: bill.lease_id
@@ -170,7 +201,7 @@ export default function Page() {
             router.push('/invoices');
             router.refresh();
         } else {
-            setIsSubmitting(false); // Let her try again
+            setIsSubmitting(false);
             alert("Something went wrong. Please check your connection.");
         }
     }
@@ -200,13 +231,26 @@ export default function Page() {
         <div className="min-h-screen flex flex-col justify-center items-center gap-2 p-6 bg-slate-100">
             <h1 className="mt-10 mb-5 text-slate-800 text-3xl font-bold">Create Invoices</h1>
             <form action="" onSubmit={handleOnSubmit} className="flex flex-col justify-center w-full px-10 py-20 shadow-md bg-slate-50 rounded-2xl border-l-8 border-red-600 gap-4">
-                <label htmlFor="billing-month"></label>
-                <input type="date" className="mx-50 border" value={inputData.billingMonth} id="billing-month" name="billingMonth" onChange={handleChange} />
+                <label htmlFor="billing-year"></label>
+                <select name="selectedYear" id="billing-year" className="border p-2 rounded-md cursor-pointer mx-5" value={selectedDate.selectedYear} onChange={handleChange} >
+                    {creationYears.map((year) => (
+                        <option key={year} value={year}>{year}</option>
+                    ))}
+                </select>
+
+                <select name="selectedMonth" id="billing-month" className="border p-2 rounded-md cursor-pointer mx-5" value={selectedDate.selectedMonth} onChange={handleChange} >
+                    {months.map((month, index) => {
+                        const monthVal = String(index + 1).padStart(2, '0');
+                        return (
+                            <option key={index} value={`${monthVal}`}>{month} </option>
+                        )
+                    })}
+                </select>
                 <table className="w-full mt-2 border-slate-200 border-collapse">
                     <thead>
                         <tr>
                             <th className="text-left py-3 px-4">
-                                <input type="checkbox" className="" onChange={handleSelectedAll}/>
+                                <input type="checkbox" className="" onChange={handleSelectedAll} />
                             </th>
                             <th className="text-gray-600 text-sm px-4 py-3 font-semibold">Room No.</th>
                             <th className="text-gray-600 text-sm px-4 py-3 font-semibold">Fullname</th>
@@ -236,11 +280,11 @@ export default function Page() {
                                     <td className="py-3 px-4 min-w-40">{bill.fullname}</td>
                                     <td className="py-3 px-4 text-center">{bill.electricity_rate_per_unit}</td>
                                     <td className="py-3 px-4 text-center">{bill.prev_electricity_reading}</td>
-                                    <td className="py-3 px-4 text-center"><input type="number" className="border" name="elecUsed" value={rowData.elec} onChange={(e) => { handleReadingChange(bill.lease_id, 'elec', e.target.value) }}  /></td>
+                                    <td className="py-3 px-4 text-center"><input type="number" className="border" name="elecUsed" value={rowData.elec} onChange={(e) => { handleReadingChange(bill.lease_id, 'elec', e.target.value) }} /></td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.elecAmount}</td>
                                     <td className="py-3 px-4 text-center">{bill.water_rate_per_unit}</td>
                                     <td className="py-3 px-4 text-center">{bill.prev_water_reading}</td>
-                                    <td className="py-3 px-4 text-center"><input type="number" className="border" value={rowData.water} onChange={(e) => { handleReadingChange(bill.lease_id, 'water', e.target.value) }}  /></td>
+                                    <td className="py-3 px-4 text-center"><input type="number" className="border" value={rowData.water} onChange={(e) => { handleReadingChange(bill.lease_id, 'water', e.target.value) }} /></td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.waterAmount}</td>
                                     <td className="py-3 px-4 text-center">{bill.monthly_rent}</td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.totalAmount}</td>

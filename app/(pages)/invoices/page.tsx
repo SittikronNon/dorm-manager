@@ -23,6 +23,10 @@ interface InvoiceData {
     paid_at: string;
 }
 
+interface SelectedYear {
+    year: string;
+}
+
 const currentYear = new Date().getFullYear();
 const months = [
     "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
@@ -37,8 +41,20 @@ export default function Page() {
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const router = useRouter();
 
-    const [invoicesMonth, setInvoicesMonth] = useState<string>(("all"));
+    const [availableYears, setAvailableYears] = useState<SelectedYear[]>([]);
+    const [invoicesMonth, setInvoicesMonth] = useState<string>("all");
+    const [invoicesYear, setInvoicesYear] = useState<string>(String(currentYear));
 
+    useEffect(() => {
+        const fetchMetadata = async () => {
+
+            const res = await fetch('/api/invoices?years');
+            const data = await res.json();
+            console.log(data)
+            setAvailableYears(data);
+        };
+        fetchMetadata();
+    }, []);
 
 
     useEffect(() => {
@@ -70,6 +86,8 @@ export default function Page() {
         fetchTenant();
     }, [invoicesMonth])
 
+
+
     function toggleSelection(id: number) {
         setSelectedIds((prev) => (
             prev.includes(id)
@@ -95,6 +113,12 @@ export default function Page() {
         } else {
             router.push(`/invoices`)
         }
+    }
+
+    async function handleOnYearChange(event: ChangeEvent<HTMLSelectElement>) {
+        const selectedYear = event.target.value;
+        setInvoicesYear(selectedYear);
+
     }
 
     async function handleMarkAsPaid() {
@@ -162,12 +186,18 @@ export default function Page() {
                 <h1 className="text-gray-500 font-medium text-2xl">List of Invoices</h1>
 
                 <div className="ml-auto">
-                    <select name="invoiceMonth" id="invoice-month" className="border p-2 rounded-md cursor-pointer" value={invoicesMonth} onChange={handleOnMonthChange}>
+                    <select name="invoiceMonth" id="invoice-month" className="border p-2 rounded-md cursor-pointer mx-5" onChange={handleOnYearChange}>
+                        {availableYears.map((item) => (
+                            <option value={item.year} key={item.year}>{item.year}</option>
+                        ))}
+
+                    </select>
+                    <select name="invoiceMonth" id="invoice-month" className="border p-2 rounded-md cursor-pointer mx-5" value={invoicesMonth} onChange={handleOnMonthChange}>
                         <option className="" value="all">แสดงทั้งหมด (All Invoices)</option>
                         {months.map((month, index) => {
                             const monthVal = String(index + 1).padStart(2, '0');
                             return (
-                                <option key={index} value={`${currentYear}-${monthVal}-01`}>{month}</option>
+                                <option key={index} value={`${invoicesYear}-${monthVal}-01`}>{month}</option>
                             )
                         })}
                     </select>
