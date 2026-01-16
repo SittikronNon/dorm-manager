@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { checkingTenant } from "@/lib/checkingTenant";
+import { getSession } from "@/lib/auth";
 
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     try {
         const { id } = await params;
         const { error } = await checkingTenant(id);

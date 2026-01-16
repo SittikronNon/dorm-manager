@@ -1,7 +1,12 @@
 import pool from "@/database/db";
+import { getSession } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+    const session = await getSession();
+
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { searchParams } = new URL(request.url);
     const onlyAvailable = searchParams.has('available');
     if (onlyAvailable) {
@@ -16,7 +21,7 @@ export async function GET(request: Request) {
             return NextResponse.json(result.rows);
 
         } catch (err) {
-            return NextResponse.json({ message: 'Failed on the database side' }, { status: 409 })
+            return NextResponse.json({ message: 'Database Error' }, { status: 500 })
         }
     } else {
         try {

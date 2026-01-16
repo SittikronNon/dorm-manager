@@ -44,17 +44,21 @@ function invoiceCalculation(bill: BillingData, currReadings: { elec: string; wat
 
     //Electricity
 
-    const elecUsed = Number(currReadings.elec) > bill.prev_electricity_reading
+    const elecUsed = currReadings.elec !== "" && Number(currReadings.elec) > bill.prev_electricity_reading
         ? Number(currReadings.elec) - bill.prev_electricity_reading
         : 0;
     const elecAmount = elecUsed * bill.electricity_rate_per_unit
 
     //Water
+    const hasWaterInput = currReadings.water !== "";
+
     const currWaterUnitsMeter = Number(currReadings.water) - bill.prev_water_reading;
-    const waterUsed = Number(currReadings.water) > bill.prev_water_reading && currWaterUnitsMeter >= 10
+    const waterUsed = (hasWaterInput && Number(currReadings.water) > bill.prev_water_reading && currWaterUnitsMeter >= 10)
         ? currWaterUnitsMeter - 10
         : 0;
-    const waterAmount = 160 + (waterUsed * bill.water_rate_per_unit)
+    const waterAmount = hasWaterInput
+        ? 160 + (waterUsed * bill.water_rate_per_unit)
+        : 0;
 
     //total
     const totalAmount = Number(bill.monthly_rent) + elecAmount + waterAmount

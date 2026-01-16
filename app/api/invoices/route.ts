@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/database/db";
 import { checkingTenant } from "@/lib/checkingTenant";
+import { getSession } from "@/lib/auth";
 
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
@@ -9,6 +10,10 @@ export async function GET(request: Request) {
 	const billingMonth = searchParams.get('month');
 	const getYears = searchParams.has('years');
 	const createBilling = searchParams.get('billing');
+
+	const session = await getSession();
+	if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
 
 	if (getYears) {
 		try {
@@ -193,6 +198,8 @@ export async function GET(request: Request) {
 
 
 export async function POST(request: Request) {
+	const session = await getSession();
+	if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	const bodyText = await request.text();
 
 	if (!bodyText || bodyText.trim() === "") return NextResponse.json({ message: "No data sent in body" }, { status: 400 })
@@ -258,6 +265,8 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+	const session = await getSession();
+	if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	let body;
 	try {
 		const bodyText = await request.text();
@@ -295,6 +304,8 @@ export async function PATCH(request: Request) {
 
 
 export async function DELETE(request: Request) {
+	const session = await getSession();
+	if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	let body;
 	try {
 		const bodyText = await request.text();

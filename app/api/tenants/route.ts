@@ -1,4 +1,5 @@
 import pool from "@/database/db";
+import { getSession } from "@/lib/auth";
 import { checkingTenant } from "@/lib/checkingTenant";
 import { NextResponse } from "next/server";
 
@@ -7,6 +8,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const tenantId = searchParams.get('id');
     const noLeaseTenants = searchParams.has('noLease')
+
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     if (noLeaseTenants) {
         const result = await pool.query(`
@@ -57,6 +61,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { fullname, phone_number, id_number } = await request.json();
     if (!fullname || !phone_number || !id_number) return NextResponse.json({ message: "Please enter all the field data" }, { status: 400 });
     try {

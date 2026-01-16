@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import pool from "@/database/db";
 import bcrypt from "bcrypt"
-import { cookies } from "next/headers";
 import jwt from "jsonwebtoken"
+import { SignJWT } from "jose";
 
 
 export async function POST(request: Request) {
@@ -10,22 +10,28 @@ export async function POST(request: Request) {
     if (!username || !password) return NextResponse.json({ message: 'login failed, please fill both username and password!' }, { status: 409 })
     try {
         const userResult = await pool.query('SELECT id, username, password FROM users WHERE username = $1', [username])
-        if (userResult.rows.length === 0) throw new Error("User not found");
+        if (userResult.rows.length === 0) return NextResponse.json({ message: 'Invalid username or password' }, { status: 401 });
 
         try {
             const user = userResult.rows[0];
 
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) return NextResponse.json({ message: 'failed to verify' }, { status: 400 });
-            const tokenData = {
+       
+
+            const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+
+            const token = await new SignJWT({
                 userId: user.id,
                 username: user.username
-            }
-
-            const token = jwt.sign(tokenData, process.env.JWT_SECRET!, {
-                expiresIn: "2hr"
             })
-            const response = NextResponse.json({message: "Login successful"}, {status:200})
+                .setProtectedHeader({ alg: 'HS256' })
+                .setIssuedAt()
+                .setExpirationTime('2h')
+                .sign(secret);
+
+            const response = NextResponse.json({ message: "Login successful" }, { status: 200 })
             response.cookies.set({
                 name: 'auth_user',
                 value: token,

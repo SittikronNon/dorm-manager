@@ -1,8 +1,12 @@
 import pool from "@/database/db";
+import { getSession } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 
 export async function GET(request: Request) {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     try {
         const { searchParams } = new URL(request.url);
         const onlyExpiring = searchParams.get('expiring');
@@ -73,6 +77,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        
     const { start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id, start_electricity_reading, start_water_reading } = await request.json();
     if (!start_date || !end_date || !monthly_rent || !electricity_rate_per_unit || !water_rate_per_unit || !tenant_id || !room_id) return NextResponse.json({ message: "Please fill all of the data!" }, { status: 409 })
     if (new Date(start_date) >= new Date(end_date)) return NextResponse.json({ message: 'Start date must be lower than end date' }, { status: 400 });
