@@ -69,7 +69,7 @@ export default function Page() {
                 setRooms(roomsData);
                 setIsRoomsFound(true);
             } catch (err) {
-                console.error("Failed to fetch data from API", err);
+                console.error("Failed to fetch data from API");
             } finally {
                 setLoading(false);
             }

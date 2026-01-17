@@ -1,6 +1,6 @@
 'use client'
 import { useParams, useRouter } from "next/navigation"
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { dateFormatter } from "@/lib/formatter";
 import Link from "next/link";
 
@@ -30,10 +30,18 @@ export default function Page() {
     const [invoiceIsFound, setInvoiceIsFound] = useState<boolean | undefined>();
     const [loading, setLoading] = useState<boolean>(true);
     const [tenant, setTenant] = useState({
+        tenant_id: 0,
         fullname: "",
         phone_number: "",
         id_number: ""
     });
+    const [isProfileEdit, setIsProfileEdit] = useState<boolean>(false);
+    const [editedProfile, setEditedProfile] = useState({
+        fullname: "",
+        phone_number: "",
+        id_number: ""
+    });
+
 
     const router = useRouter();
 
@@ -68,6 +76,7 @@ export default function Page() {
                     return;
                 }
                 setTenant({
+                    tenant_id: tenantData.tenant_id,
                     fullname: tenantData.fullname,
                     phone_number: tenantData.phone_number,
                     id_number: tenantData.id_number
@@ -114,7 +123,49 @@ export default function Page() {
         );
     }
 
+    function handleEditClick() {
+        setEditedProfile({
+            fullname: tenant.fullname,
+            phone_number: tenant.phone_number,
+            id_number: tenant.id_number
+        });
 
+        setIsProfileEdit(true)
+    }
+
+    async function handleSave() {
+        const res = await fetch('/api/tenants', {
+            method: 'PATCH',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                tenant_id: tenant.tenant_id,
+                fullname: editedProfile.fullname,
+                phone_number: editedProfile.phone_number,
+                id_number: editedProfile.id_number
+            })
+        })
+
+        if(!res.ok) {
+            alert("failed to save the data")
+            return
+        }
+        setTenant((prev) => ({
+            ...prev,
+            fullname: editedProfile.fullname,
+            phone_number: editedProfile.phone_number,
+            id_number: editedProfile.id_number
+        }))
+        setIsProfileEdit(false)
+    }
+
+    function handleEditChange(event: ChangeEvent<HTMLInputElement>) {
+        const { name, value } = event.target;
+
+        setEditedProfile((prev) => ({
+            ...prev,
+            [name]: value
+        }))
+    }
 
     // handle 404
     if (isFound === false) {
@@ -129,10 +180,37 @@ export default function Page() {
 
     return (
         <div className="m-4">
-            <div>
-                <h1>{tenant.fullname}</h1>
-                <h1>{tenant.phone_number}</h1>
-                <h1>{tenant.id_number}</h1>
+            <div className="flex  min-h-14 items-center px-4 py-4">
+                {!isProfileEdit ?
+                    (
+                        <div className="flex items-center gap-8">
+                            <p className="font-medium text-2xl">{tenant.fullname}</p>
+                            <p>เบอร์โทรศัพท์ {tenant.phone_number}</p>
+                            <p>รหัสบัตรประชาชน {tenant.id_number}</p>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-8">
+                            <input type="text" onChange={handleEditChange} name="fullname"  className="bg-white border" value={editedProfile.fullname} />
+                            <input type="text" onChange={handleEditChange} name="phone_number"  className="bg-white border" value={editedProfile.phone_number} />
+                            <input type="text" onChange={handleEditChange} name="id_number"  className="bg-white border" value={editedProfile.id_number} />
+                        </div>
+                    )}
+
+
+                {!isProfileEdit ?
+                    (
+                        <div className="flex ml-auto gap-6 w-90">
+                            <button className="ml-auto bg-yellow-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-yellow-600 hover:text-white cursor-pointer flex-1" onClick={() => handleEditClick()}>EDIT</button>
+                            <button className="ml-auto bg-red-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-red-600 hover:text-white cursor-pointer flex-1">Mark as Inactive</button>
+                        </div>
+                    ) : (
+                        <div className="flex ml-auto gap-6 min-w-xl">
+                            <button className="ml-auto bg-green-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-green-600 hover:text-white cursor-pointer flex-1" onClick={() => handleSave()}>SAVE</button>
+                            <button className="ml-auto bg-red-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-red-600 hover:text-white cursor-pointer flex-1" onClick={() => setIsProfileEdit(!isProfileEdit)}>CANCEL</button>
+                            <button className="ml-auto bg-red-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-red-600 hover:text-white cursor-pointer flex-1">Mark as Inactive</button>
+                        </div>
+                    )}
+
             </div>
 
             <div className="bg-white p-6 rounded-xl border-l-8 border-red-500 shadow-sm col-span-2">
