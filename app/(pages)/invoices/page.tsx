@@ -47,6 +47,12 @@ export default function Page() {
     const [invoicesMonth, setInvoicesMonth] = useState<string>("all");
     const [invoicesYear, setInvoicesYear] = useState<string>(String(currentYear));
 
+    const isSelected = selectedIds.length === 0;
+
+    const selectedInvoicesData = invoices.filter((invoice) => 
+        selectedIds.includes(invoice.id)
+    )
+
     useEffect(() => {
         const fetchMetadata = async () => {
 
@@ -110,6 +116,7 @@ export default function Page() {
     async function handleOnMonthChange(event: ChangeEvent<HTMLSelectElement>) {
         const selectedMonth = event.target.value;
         setInvoicesMonth(selectedMonth)
+        setSelectedIds([]);
         if (selectedMonth !== "all") {
             router.push(`/invoices?month=${selectedMonth}`)
         } else {
@@ -120,6 +127,7 @@ export default function Page() {
     async function handleOnYearChange(event: ChangeEvent<HTMLSelectElement>) {
         const selectedYear = event.target.value;
         setInvoicesYear(selectedYear);
+        setSelectedIds([]);
 
     }
 
@@ -187,7 +195,9 @@ export default function Page() {
 
             <SideDrawerInvoice
                 isOpen={isSideDrawerOpen}
-                onClose={() => setIsSideDrawerToggle(!isSideDrawerOpen)} />
+                onClose={() => setIsSideDrawerToggle(!isSideDrawerOpen)} 
+                selectedInvoices={selectedInvoicesData}
+                />
 
             <div className="flex border-b border-slate-400/50 pb-4 mb-4 px-4">
                 <h1 className="text-gray-500 font-medium text-2xl">List of Invoices</h1>
@@ -208,9 +218,9 @@ export default function Page() {
                             )
                         })}
                     </select>
-                    <button onClick={() => setIsSideDrawerToggle(!isSideDrawerOpen)} className={`mx-5 ${selectedIds.length === 0 ? 'bg-slate-400 cursor-not-allowed text-slate-200' : 'bg-orange-300 cursor-pointer hover:bg-orange-600 hover:text-white'} p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105  `}>PRINT</button>
-                    <button onClick={handleMarkAsPaid} className={`mx-5 ${selectedIds.length === 0 ? 'bg-slate-400 cursor-not-allowed text-slate-200' : 'bg-green-300 cursor-pointer hover:bg-green-600 hover:text-white'} p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105  `}>Mark as paid</button>
-                    <button onClick={handleDeleteSelected} className={`mx-5 ${selectedIds.length === 0 ? 'bg-slate-400 cursor-not-allowed text-slate-200' : 'bg-red-300 cursor-pointer hover:bg-red-600 hover:text-white'} p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105  `}>Delete Selected</button>
+                    <button disabled={isSelected} onClick={() => setIsSideDrawerToggle(!isSideDrawerOpen)} className={`mx-5 ${selectedIds.length === 0 ? 'bg-slate-400 cursor-not-allowed text-slate-200' : 'bg-orange-300 cursor-pointer hover:bg-orange-600 hover:text-white'} p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105  `}>PRINT</button>
+                    <button disabled={isSelected} onClick={handleMarkAsPaid} className={`mx-5 ${selectedIds.length === 0 ? 'bg-slate-400 cursor-not-allowed text-slate-200' : 'bg-green-300 cursor-pointer hover:bg-green-600 hover:text-white'} p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105  `}>Mark as paid</button>
+                    <button disabled={isSelected} onClick={handleDeleteSelected} className={`mx-5 ${selectedIds.length === 0 ? 'bg-slate-400 cursor-not-allowed text-slate-200' : 'bg-red-300 cursor-pointer hover:bg-red-600 hover:text-white'} p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105  `}>Delete Selected</button>
                     <Link href='/invoices/create' className="mx-5 bg-yellow-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-yellow-600 hover:text-white cursor-pointer">+ Add Invoices</Link>
                 </div>
             </div>
