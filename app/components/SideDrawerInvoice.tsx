@@ -1,4 +1,5 @@
 'use client'
+import { FaChevronCircleLeft, FaChevronCircleRight } from "react-icons/fa";
 import { useState } from 'react';
 import Invoice from './Invoice';
 
@@ -28,13 +29,49 @@ interface PropsData {
 
 const SideDrawerInvoice = ({ isOpen, onClose, selectedInvoices }: PropsData) => {
     const [selectedId, setSelectedId] = useState<number>();
+    const [direction, setDirection] = useState('right');
 
     const activeInvoice = selectedInvoices.find(invoice => invoice.id === selectedId);
+    const currInvoiceIndex = selectedInvoices.findIndex(invoice => invoice.id === selectedId)
+
+    const isFirstItem = currInvoiceIndex === 0;
+    const isLastItem = currInvoiceIndex === selectedInvoices.length - 1;
+
+    function handleNext() {
+        setSelectedId((prev) => {
+            const index = selectedInvoices.findIndex((invoice) => invoice.id === prev)
+            if (index < selectedInvoices.length - 1) {
+                return selectedInvoices[index + 1].id
+            }
+            return prev;
+        })
+        setDirection('right')
+    }
+
+    function handlePrev() {
+        setSelectedId((prev) => {
+            const index = selectedInvoices.findIndex((invoice) => invoice.id === prev)
+            if (index > 0) {
+                return selectedInvoices[index - 1].id
+            }
+            return prev;
+        })
+        setDirection('left')
+    }
     return (
         <div className={`bg-black/50 fixed size-full z-50 inset-0 flex justify-end transition-all p-6  duration-300 ${isOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
             <div className='w-full h-full flex justify-center '>
-                <div className={`flex bg-white h-full w-full max-w-5xl transition-opacity delay-200 duration-500 ${isOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
-                    <Invoice selectedInvoice={activeInvoice} />
+                <div className={` relative flex bg-white h-full w-full max-w-5xl transition-opacity delay-200 duration-500 ${isOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
+                    <button className="flex justify-center absolute w-20 -left-22 cursor-pointer duration-150 top-1/2 -translate-y-1/2 z-10 p-3 bg-white text-black rounded-full hover:bg-blue-400 disabled:opacity-0 transition" onClick={handlePrev} disabled={isFirstItem}><FaChevronCircleLeft size={50} />
+                    </button>
+                    <div
+                        className={`flex-1 overflow-y-auto ${direction === 'right' ? 'animate-slide-right' : 'animate-slide-left'}`}
+                        key={activeInvoice?.id}
+                    >
+                        <Invoice selectedInvoice={activeInvoice} />
+                    </div>
+                    <button className="flex justify-center absolute w-20 -right-22 cursor-pointer duration-150 top-1/2 -translate-y-1/2 z-10 p-3 bg-white text-black rounded-full hover:bg-blue-400 disabled:opacity-0 transition" onClick={handleNext} disabled={isLastItem}><FaChevronCircleRight size={50} />
+                    </button>
                 </div>
             </div>
             <div className={`bg-white relative w-full max-w-lg h-full shadow-2xl p-6 transform transition-transform duration-300 ease-in-out overflow-y-auto  ${isOpen ? 'translate-x-0' : 'translate-x-full '}`}>

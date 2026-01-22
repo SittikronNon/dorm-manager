@@ -1,4 +1,5 @@
 import React from 'react'
+import { dateFormatter } from '@/lib/formatter';
 
 interface InvoiceData {
     id: number;
@@ -35,22 +36,45 @@ const Invoice = ({ selectedInvoice }: PropsData) => {
     return (
         <div className='justify-center bg-zinc-50 h-full w-full'>
             <div className='flex w-full h-36 bg-slate-800'>
-                <div className='flex w-full mx-10 my-2'>
-                    <div className='bg-red-400 flex-1'>
-
+                <div className='flex w-full mx-10 my-4 text-white'>
+                    <div className='flex-1'>
+                        <h1 className='text-4xl font-bold'>Wanna House</h1>
+                        <p>
+                            123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย<br />
+                            กรุงเทพมหานคร 10110<br />
+                            โทร: 02-123-4567 | อีเมล: info@grandapt.com
+                        </p>
                     </div>
-                    <div className='bg-green-400 flex-1'>
-
+                    <div className='flex-1 text-right'>
+                        <h1 className='text-4xl font-bold'>ใบแจ้งหนี้</h1>
+                        <p>
+                            รหัส INV-2026-001<br />
+                            {dateFormatter(selectedInvoice.billing_month)}<br />
+                        </p>
                     </div>
                 </div>
             </div>
             <div className='mx-10'>
-                <div className='flex h-36 w-full my-5'>
-                    <div className='bg-blue-400 flex-1'>
-
+                <div className='flex h-36 w-full my-5 gap-2'>
+                    <div className='bg-zinc-100 shadow-md border-l-4 border-slate-800 rounded-2xl flex-1'>
+                        <div className='flex flex-col ml-10 mt-4 h-full w-full'>
+                            <h1 className='font-medium'>ออกบิลให้</h1>
+                            <div className='mt-2 text-sm'>
+                                <p>คุณ{selectedInvoice.fullname}</p>
+                                <p>ห้อง {selectedInvoice.room_number}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div className='bg-yellow-400 flex-1'>
-
+                    <div className='bg-zinc-100 shadow-md border-l-4 border-slate-800 rounded-2xl flex-1'>
+                        <div className='flex flex-col ml-10 mt-4 h-full w-full'>
+                            <h1 className='font-medium'>รายละเอียดห้องพัก</h1>
+                            <div className='mt-2 text-sm'>
+                                <p className='font-medium'>ห้อง {selectedInvoice.room_number}</p>
+                                <p>ประเภท: 1 ห้องนอน</p>
+                                <p>ขนาด: </p>
+                                <p>สัญญาเช่า: </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className='overflow-hidden rounded-xl border border-slate-200 shadow-sm h-46'>
@@ -94,13 +118,32 @@ const Invoice = ({ selectedInvoice }: PropsData) => {
                         </tbody>
                     </table>
                 </div>
-                <div className='flex mt-4'>
-                    <div className='h-40  bg-zinc-500 flex-1'>
-
+                <div className='flex mt-4 pb-6 border-b border-zinc-300'>
+                    <div className='w-full flex items-center h-42 shadow-md bg-slate-800/5 flex-2'>
+                        <span className='ml-10'>หมายเหตุ: </span>
                     </div>
-                    <div className='h-40  bg-slate-800/5 flex-1'>
-
+                    <div className='h-42 shadow-md bg-slate-800/5 flex-1 border-slate-950/30 border'>
+                        <div className='w-full flex justify-between px-10'>
+                            <span>รวมเป็นเงิน</span>
+                            <span className=''>{selectedInvoice.total_amount}</span>
+                        </div>
+                        <div className='w-full flex justify-between px-10'>
+                            <span>ส่วนลด</span>
+                            <span className=''>0.00</span>
+                        </div>
+                        <div className='w-full flex justify-between px-10'>
+                            <span>ภาษีมูลค่าเพิ่ม 7%</span>
+                            <span className=''>0.00</span>
+                        </div>
+                        <div className='w-full flex justify-between px-10 py-6 bg-slate-800 text-white'>
+                            <span>ภาษีมูลค่าเพิ่ม 7%</span>
+                            <span className=''>{selectedInvoice.total_amount}</span>
+                        </div>
                     </div>
+                </div>
+                <div className='flex flex-col h-30 justify-end items-end gap-10'>
+                    <span className='text-center w-50 '>ลงชื่อ</span>
+                    <span className='border-b w-50'></span>
                 </div>
             </div>
         </div>
