@@ -1,5 +1,5 @@
-import React from 'react'
 import { dateFormatter } from '@/lib/formatter';
+import { FaPrint } from "react-icons/fa";
 
 interface InvoiceData {
     id: number;
@@ -46,7 +46,7 @@ const Invoice = ({ selectedInvoice }: PropsData) => {
                         </p>
                     </div>
                     <div className='flex-1 text-right'>
-                        <h1 className='text-4xl font-bold'>ใบแจ้งหนี้</h1>
+                        <h2 className='text-4xl font-bold'>ใบแจ้งหนี้</h2>
                         <p>
                             รหัส INV-2026-001<br />
                             {dateFormatter(selectedInvoice.billing_month)}<br />
