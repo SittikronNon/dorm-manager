@@ -25,7 +25,7 @@ const Sidebar = () => {
         }
     }
     return (
-        <div className=' bg-linear-65 from-slate-700 to-zinc-800 w-64 h-dvh flex flex-col sticky top-0 text-center'>
+        <div className='sidebar bg-linear-65 from-slate-700 to-zinc-800 w-64 h-dvh flex flex-col sticky top-0 text-center'>
             <Link href='/' className='text-3xl cursor-pointer hover:bg-stone-400 font-semibold border-b border-indigo-300/50 py-6 transition duration-150 text-white' >Wanna House</Link>
             <nav className='flex flex-col mt-6 gap-6'>
                 <ul>

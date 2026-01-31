@@ -34,7 +34,7 @@ const Invoice = ({ selectedInvoice }: PropsData) => {
         : 160
     const totalElec = selectedInvoice.electricity_units_used * selectedInvoice.electricity_rate_per_unit;
     return (
-        <div className='justify-center bg-zinc-50 h-full w-full'>
+        <div className='justify-center bg-white h-full w-full'>
             <div className='flex w-full h-36 bg-slate-800'>
                 <div className='flex w-full mx-10 my-4 text-white'>
                     <div className='flex-1'>
@@ -141,9 +141,17 @@ const Invoice = ({ selectedInvoice }: PropsData) => {
                         </div>
                     </div>
                 </div>
-                <div className='flex flex-col h-30 justify-end items-end gap-10'>
-                    <span className='text-center w-50 '>ลงชื่อ</span>
-                    <span className='border-b w-50'></span>
+                <div className='signature-container flex justify-end gap-5'>
+                    <div className='flex flex-col h-30 justify-end items-end gap-2'>
+                        <span className='border-b w-50'></span>
+                        <span className='text-center w-50 '>ผู้จัดทำ</span>
+                        <span className='text-center w-50 '>26 01 69</span>
+                    </div>
+                    <div className='flex flex-col h-30 justify-end items-end gap-2'>
+                        <span className='border-b w-50'></span>
+                        <span className='text-center w-50 '>ผู้จัดการ</span>
+                        <span className='text-center w-50 '>26 01 69</span>
+                    </div>
                 </div>
             </div>
         </div>

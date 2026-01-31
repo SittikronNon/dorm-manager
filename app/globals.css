@@ -41,10 +41,34 @@ body {
 
 
 @media print {
+
+
+  .side-drawer, .action-bar, .sidebar, .invoices-table {
+    display: none;
+  }
+
+  .invoices-container {
+    min-height: 0;
+    height: auto;
+  }
+
+
+
+  .invoice-to-print {
+    visibility: visible;
+    print-color-adjust: exact;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .signature-container {
+    margin-top: 10rem;
+  }
+
   @page {
     margin: 0;
+    size: auto;
   }
-  body {
-    margin: 1cm;
-  }
+
 }

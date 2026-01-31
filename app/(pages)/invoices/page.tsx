@@ -191,7 +191,7 @@ export default function Page() {
 
 
     return (
-        <div className="min-h-screen m-4">
+        <div className="invoices-container min-h-screen m-4">
 
             <SideDrawerInvoice
                 isOpen={isSideDrawerOpen}
@@ -224,7 +224,7 @@ export default function Page() {
                     <Link href='/invoices/create' className="mx-5 bg-yellow-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-yellow-600 hover:text-white cursor-pointer">+ Add Invoices</Link>
                 </div>
             </div>
-            <div className="bg-white p-6 rounded-xl border-l-8 border-red-500 shadow-sm col-span-2 min-h-96">
+            <div className="invoices-table overflow-auto bg-white p-6 rounded-xl border-l-8 border-red-500 shadow-sm col-span-2 min-h-96">
                 <table className={`w-full mt-2 border-slate-200 border-collapse`} >
                     <thead>
                         <tr>
