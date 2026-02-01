@@ -40,23 +40,47 @@ body {
 .animate-slide-left {animation: slideLeft 0.3s ease-out;}
 
 
+
+.bulk-view {
+  display: none;
+}
+
+
 @media print {
 
 
   .side-drawer, .action-bar, .sidebar, .invoices-table {
     display: none;
   }
+  .is-bulk .single-view { display: none; }
+  .is-bulk .bulk-view { display: block; }
+  .is-bulk .invoice-to-print { break-after: page; }
 
-  .invoices-container {
-    min-height: 0;
+  .is-single .bulk-view { display: none; }
+  .is-single .single-view { display: block; }
+
+  main > *:not(.preview-container) {
+    visibility: hidden;
     height: auto;
   }
 
-
+  .invoices-container {
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .modal-container {
+    position: static;
+    height: auto;
+    margin: 0;
+    padding: 0;
+  }
 
   .invoice-to-print {
-    visibility: visible;
     print-color-adjust: exact;
+    visibility: visible;
     width: 100%;
     margin: 0;
     padding: 0;
@@ -72,3 +96,4 @@ body {
   }
 
 }
+

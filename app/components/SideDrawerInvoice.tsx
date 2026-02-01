@@ -31,12 +31,22 @@ interface PropsData {
 const SideDrawerInvoice = ({ isOpen, onClose, selectedInvoices }: PropsData) => {
     const [selectedId, setSelectedId] = useState<number>();
     const [direction, setDirection] = useState('right');
+    const [printMode, setPrintMode] = useState<'single' | 'bulk' | null>(null);
 
     const activeInvoice = selectedInvoices.find(invoice => invoice.id === selectedId);
     const currInvoiceIndex = selectedInvoices.findIndex(invoice => invoice.id === selectedId)
 
     const isFirstItem = currInvoiceIndex === 0;
     const isLastItem = currInvoiceIndex === selectedInvoices.length - 1;
+
+    function handlePrint(mode: 'single' | 'bulk') {
+        setPrintMode(mode);
+        setTimeout(() => {
+            window.print();
+            setPrintMode(null);
+        }, 100)
+        
+    }
 
     function handleNext() {
         setSelectedId((prev) => {
@@ -60,18 +70,25 @@ const SideDrawerInvoice = ({ isOpen, onClose, selectedInvoices }: PropsData) => 
         setDirection('left')
     }
     return (
-        <div className={`bg-black/50 fixed size-full z-50 inset-0 flex justify-end transition-all p-6  duration-300 ${isOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
+        <div className={`modal-container bg-black/50 fixed size-full z-50 inset-0 flex justify-end transition-all p-6  duration-300 ${isOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
             <div className='w-full h-full flex flex-col justify-center items-center '>
                 <div className="flex flex-col items-center w-full h-full gap-4">
-                    <ActionBar />
-                    <div className={` relative flex bg-white h-full w-full max-w-5xl print:max-w-none invoice-to-print transition-opacity delay-200 duration-500 ${isOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
+                    <ActionBar onPrint={handlePrint} />
+                    <div className={`preview-container ${printMode === 'bulk' ? 'is-bulk' : 'is-single'} relative flex bg-white h-full w-full max-w-5xl  transition-opacity delay-200 duration-500 ${isOpen ? 'visible opacity-100' : 'invisible opacity-0'} `}>
                         <button className="flex justify-center absolute w-20 -left-22 cursor-pointer duration-150 top-1/2 -translate-y-1/2 z-10 p-3 bg-white text-black rounded-full hover:bg-blue-400 disabled:opacity-0 transition" onClick={handlePrev} disabled={isFirstItem}><FaChevronCircleLeft size={50} />
                         </button>
                         <div
-                            className={`selected-invoice-container w-full overflow-y-auto ${direction === 'right' ? 'animate-slide-right' : 'animate-slide-left'}`}
+                            className={` w-full overflow-y-auto single-view ${direction === 'right' ? 'animate-slide-right' : 'animate-slide-left'} invoice-to-print`}
                             key={activeInvoice?.id}
                         >
                             <Invoice selectedInvoice={activeInvoice} />
+                        </div>
+                        <div className={`w-full bulk-view`}>
+                            {selectedInvoices.map((invoice) => (
+                                <div key={invoice.id} className="invoice-to-print">
+                                    <Invoice selectedInvoice={invoice} />
+                                </div>
+                            ))}
                         </div>
                         <button className="flex justify-center absolute w-20 -right-22 cursor-pointer duration-150 top-1/2 -translate-y-1/2 z-10 p-3 bg-white text-black rounded-full hover:bg-blue-400 disabled:opacity-0 transition" onClick={handleNext} disabled={isLastItem}><FaChevronCircleRight size={50} />
                         </button>

@@ -34,7 +34,7 @@ const Invoice = ({ selectedInvoice }: PropsData) => {
         : 160
     const totalElec = selectedInvoice.electricity_units_used * selectedInvoice.electricity_rate_per_unit;
     return (
-        <div className='justify-center bg-white h-full w-full'>
+        <div className='justify-center bg-white h-auto w-full'>
             <div className='flex w-full h-36 bg-slate-800'>
                 <div className='flex w-full mx-10 my-4 text-white'>
                     <div className='flex-1'>
