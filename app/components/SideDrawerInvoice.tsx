@@ -45,7 +45,7 @@ const SideDrawerInvoice = ({ isOpen, onClose, selectedInvoices }: PropsData) => 
             window.print();
             setPrintMode(null);
         }, 100)
-        
+
     }
 
     function handleNext() {
@@ -96,7 +96,10 @@ const SideDrawerInvoice = ({ isOpen, onClose, selectedInvoices }: PropsData) => 
                 </div>
             </div>
             <div className={`side-drawer bg-white relative w-full max-w-lg h-full shadow-2xl p-6 transform transition-transform duration-300 ease-in-out overflow-y-auto  ${isOpen ? 'translate-x-0' : 'translate-x-full '}`}>
-                <h2 className="text-2xl font-bold">Invoice Review</h2>
+                <div className="flex items-center">
+                    <h2 className="text-2xl font-bold">Invoice Review</h2>
+                    <p className="text-sm font-medium ml-auto mr-20">Total items: {selectedInvoices.length}</p>
+                </div>
                 <table className="w-full mt-2 border-slate-200 border-collapse">
                     <thead className="sticky top-0 z-10 bg-white">
                         <tr className="px-2">

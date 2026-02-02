@@ -9,9 +9,9 @@ interface BillingData {
     fullname: string;
     monthly_rent: number;
     electricity_rate_per_unit: number;
-    prev_electricity_reading: number;
+    latest_elec_reading: number;
     water_rate_per_unit: number;
-    prev_water_reading: number;
+    latest_water_reading: number;
 }
 
 interface CalcResult {
@@ -44,17 +44,17 @@ function invoiceCalculation(bill: BillingData, currReadings: { elec: string; wat
 
     //Electricity
 
-    const elecUsed = currReadings.elec !== "" && Number(currReadings.elec) > bill.prev_electricity_reading
-        ? Number(currReadings.elec) - bill.prev_electricity_reading
+    const elecUsed = currReadings.elec !== "" && Number(currReadings.elec) > bill.latest_elec_reading
+        ? Number(currReadings.elec) - bill.latest_elec_reading
         : 0;
     const elecAmount = elecUsed * bill.electricity_rate_per_unit
 
     //Water
     const hasWaterInput = currReadings.water !== "";
 
-    const actualWaterUsed = Number(currReadings.water) - bill.prev_water_reading;
+    const actualWaterUsed = Number(currReadings.water) - bill.latest_water_reading;
 
-    const waterUsed = (hasWaterInput && Number(currReadings.water) > bill.prev_water_reading && actualWaterUsed >= 10)
+    const waterUsed = (hasWaterInput && Number(currReadings.water) > bill.latest_water_reading && actualWaterUsed >= 10)
         ? actualWaterUsed - 10
         : 0;
     const waterAmount = hasWaterInput
@@ -286,11 +286,11 @@ export default function Page() {
                                     <td className="py-3 px-4">{bill.room_number}</td>
                                     <td className="py-3 px-4 min-w-40">{bill.fullname}</td>
                                     <td className="py-3 px-4 text-center">{bill.electricity_rate_per_unit}</td>
-                                    <td className="py-3 px-4 text-center">{bill.prev_electricity_reading}</td>
+                                    <td className="py-3 px-4 text-center">{bill.latest_elec_reading}</td>
                                     <td className="py-3 px-4 text-center"><input type="number" className="border" name="elecUsed" value={rowData.elec} onChange={(e) => { handleReadingChange(bill.lease_id, 'elec', e.target.value) }} /></td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.elecAmount}</td>
                                     <td className="py-3 px-4 text-center">{bill.water_rate_per_unit}</td>
-                                    <td className="py-3 px-4 text-center">{bill.prev_water_reading}</td>
+                                    <td className="py-3 px-4 text-center">{bill.latest_water_reading}</td>
                                     <td className="py-3 px-4 text-center"><input type="number" className="border" value={rowData.water} onChange={(e) => { handleReadingChange(bill.lease_id, 'water', e.target.value) }} /></td>
                                     <td className="py-3 px-4 text-center">{calculatedBill.waterAmount}</td>
                                     <td className="py-3 px-4 text-center">{bill.monthly_rent}</td>

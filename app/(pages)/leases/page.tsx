@@ -15,8 +15,8 @@ interface LeasesData {
     end_date: string;
     electricity_rate_per_unit: number;
     water_rate_per_unit: number;
-    start_electricity_reading: number;
-    start_water_reading: number;
+    latest_elec_reading: number;
+    latest_water_reading: number;
     created_at: string,
     status: string;
 }
@@ -36,6 +36,7 @@ export default function Page() {
                 const res = await fetch('/api/leases');
                 if (!res.ok) throw new Error('Failed to fetch the data');
                 const data = await res.json();
+                console.log(data)
                 setLeases(data);
             } catch (err) {
                 console.error("Failed to fetch the data from APIs", err)
@@ -106,8 +107,8 @@ export default function Page() {
                                 <td className="text-sm px-4 py-3">{dateFormatter(lease.end_date)}</td>
                                 <td className="text-sm px-4 py-3">{lease.electricity_rate_per_unit}</td>
                                 <td className="text-sm px-4 py-3">{lease.water_rate_per_unit}</td>
-                                <td className="text-sm px-4 py-3">{lease.start_electricity_reading}</td>
-                                <td className="text-sm px-4 py-3">{lease.start_water_reading}</td>
+                                <td className="text-sm px-4 py-3">{lease.latest_elec_reading}</td>
+                                <td className="text-sm px-4 py-3">{lease.latest_water_reading}</td>
                                 <td className="text-sm px-4 py-3">{dateFormatter(lease.created_at)}</td>
                                 <td className="text-sm px-4 py-3 text-bold text-center align-middle">
                                     <span className={`inline-block rounded-full w-20 ${lease.status === 'active' ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600'}`}>

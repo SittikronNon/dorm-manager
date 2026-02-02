@@ -37,33 +37,21 @@ export async function GET(request: Request) {
 		l.monthly_rent,
 		l.electricity_rate_per_unit,
 		l.water_rate_per_unit,
-		COALESCE(
-			(
-				SELECT i2.electricity_reading 
-				FROM invoices i2
-				JOIN leases l2 ON l2.id = i2.lease_id
-				WHERE l2.room_id = l.room_id
-				AND i2.billing_month < $1
-				ORDER BY i2.billing_month DESC
-				LIMIT 1),
-				l.start_electricity_reading
-		) AS prev_electricity_reading,
-		COALESCE(
-			(
-				SELECT i2.water_reading 
-				FROM invoices i2
-				JOIN leases l2 ON l2.id = i2.lease_id
-				WHERE l2.room_id = l.room_id
-				AND i2.billing_month < $1
-				ORDER BY i2.billing_month DESC
-				LIMIT 1),
-				l.start_water_reading
-		) AS prev_water_reading
+		(
+        	SELECT unit FROM meter_readings
+                WHERE room_id = r.id AND reading_type = 'electricity'
+                ORDER BY billing_month DESC, created_at DESC LIMIT 1
+        ) as latest_elec_reading,
+        (
+            SELECT unit FROM meter_readings
+                WHERE room_id = r.id AND reading_type = 'water'
+                ORDER BY billing_month DESC, created_at DESC LIMIT 1
+        ) as latest_water_reading
 		FROM leases l
 		JOIN rooms r ON r.id = l.room_id
 		JOIN tenants t ON t.id = l.tenant_id
 		WHERE l.status = 'active'
-            `, [createBilling])
+            `)
 			return NextResponse.json(result.rows)
 		} catch (err) {
 			return NextResponse.json({ message: "failed on the database side" }, { status: 500 })

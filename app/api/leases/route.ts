@@ -55,10 +55,18 @@ export async function GET(request: Request) {
             l.electricity_rate_per_unit,
             l.water_rate_per_unit,
             l.created_at,
-            l.start_electricity_reading,
-            l.start_water_reading,
+            (
+                SELECT unit FROM meter_readings
+                       WHERE room_id = r.id AND reading_type = 'electricity'
+                       ORDER BY billing_month DESC, created_at DESC LIMIT 1
+            ) as latest_elec_reading,
+             (
+                SELECT unit FROM meter_readings
+                       WHERE room_id = r.id AND reading_type = 'water'
+                       ORDER BY billing_month DESC, created_at DESC LIMIT 1
+            ) as latest_water_reading,
             l.status
-            FROM 
+            FROM
             leases l
             JOIN rooms r ON r.id = l.room_id
             JOIN tenants t ON t.id = l.tenant_id
@@ -101,13 +109,21 @@ export async function POST(request: Request) {
         if (roomCheck.rows.length === 0) return NextResponse.json({ message: 'The room is not found' }, { status: 404 })
         if (roomCheck.rows[0].is_available !== true) return NextResponse.json({ message: 'The room is currently occupied' }, { status: 400 })
 
-        await client.query(`INSERT INTO leases (start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id, start_electricity_reading, start_water_reading) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id, start_electricity_reading, start_water_reading])
+        await client.query(`INSERT INTO leases (start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`, [start_date, end_date, monthly_rent, electricity_rate_per_unit, water_rate_per_unit, tenant_id, room_id])
 
         await client.query(`
                 UPDATE rooms
                 SET is_available = false
                 WHERE id = $1
             `, [room_id])
+
+        await client.query(`
+            INSERT INTO meter_readings (room_id, reading_type, unit, billing_month)
+            VALUES
+                ($1, 'electricity', $2, $3),
+                ($1, 'water', $4, $3)
+            `, [room_id, start_electricity_reading, start_date, start_water_reading])
+
         await client.query('COMMIT')
         return NextResponse.json({ message: 'Successfully insert a new lease!' }, { status: 201 })
     } catch (err) {
