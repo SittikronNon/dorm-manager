@@ -3,6 +3,14 @@ import pool from "@/database/db";
 import { checkingTenant } from "@/lib/checkingTenant";
 import { getSession } from "@/lib/auth";
 
+interface MeterReadingBatch {
+	ids: number[];
+	types: ('electricity' | 'water')[];
+	units: number[];
+	months: string[];
+	invoice_ids: number[];
+}
+
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const mode = searchParams.get('mode');
@@ -202,10 +210,10 @@ export async function POST(request: Request) {
 
 	const invoices = Array.isArray(body) ? body : [body];
 	if (invoices.length === 0) return NextResponse.json({ message: "No invoice data provided" }, { status: 400 })
-
+	const client = await pool.connect();
 	try {
-
-		const query = `
+		await client.query("BEGIN");
+		const invoiceQuery = `
 					   INSERT INTO invoices (
                        electricity_units_used,
                        electricity_amount,
@@ -230,6 +238,7 @@ export async function POST(request: Request) {
 							$9::numeric[],
 							$10::integer[]
 					   )
+				RETURNING id, lease_id, (SELECT room_id FROM leases WHERE id = lease_id) as room_id, electricity_reading, water_reading, billing_month
 			`;
 		const params = [
 			invoices.map(i => i.electricity_units_used),
@@ -244,10 +253,56 @@ export async function POST(request: Request) {
 			invoices.map(i => i.lease_id)
 		]
 
-		await pool.query(query, params)
+		const result = await client.query(invoiceQuery, params)
+		const createInvoices = result.rows
+
+		const meterParams: MeterReadingBatch = {
+			ids: [],
+			types: [],
+			units: [],
+			months: [],
+			invoice_ids: [],
+		}
+
+		for (const inv of createInvoices) {
+			meterParams.ids.push(inv.room_id)
+			meterParams.types.push('electricity')
+			meterParams.units.push(Number(inv.electricity_reading))
+			meterParams.months.push(inv.billing_month)
+			meterParams.invoice_ids.push(inv.id)
+
+			meterParams.ids.push(inv.room_id)
+			meterParams.types.push('water')
+			meterParams.units.push(Number(inv.water_reading))
+			meterParams.months.push(inv.billing_month)
+			meterParams.invoice_ids.push(inv.id)
+		}
+
+		await client.query(`
+				INSERT INTO meter_readings (
+					room_id,
+					reading_type,
+					unit,
+					billing_month,
+					invoice_id
+				)
+				SELECT * FROM UNNEST (
+					$1::integer[],
+					$2::text[],
+					$3::numeric[],
+					$4::date[],
+					$5::integer[]
+				)
+			`, [meterParams.ids, meterParams.types, meterParams.units, meterParams.months, meterParams.invoice_ids])
+
+		await client.query('COMMIT')
+
 		return NextResponse.json({ message: "Successfully Created the new invoices!", params }, { status: 201 })
 	} catch (err) {
+		await client.query('ROLLBACK')
 		return NextResponse.json({ message: 'Failed on the database side' }, { status: 500 });
+	} finally {
+		client.release();
 	}
 
 }
@@ -309,23 +364,28 @@ export async function DELETE(request: Request) {
 	}
 
 	const ids = Array.isArray(body) ? body : body.invoiceIds || [];
-	console.log(ids)
 
 	if (!Array.isArray(ids) || ids.length === 0) return NextResponse.json({ message: "No valid IDs provided" }, { status: 400 })
 
 	const hasInvalid = ids.some((id: string | number) => isNaN(Number(id)) || id === null);
 
 	if (hasInvalid) return NextResponse.json({ message: "Invalid type of ids! All must be number" });
+	const client = await pool.connect();
 
 	try {
-		const query = `
+		await client.query('BEGIN');
+
+		await client.query(`
 				DELETE FROM invoices
 				WHERE id = ANY($1::int[])
-		`
-		await pool.query(query, [ids]);
+		`, [ids]);
+		await client.query('COMMIT')
 		return NextResponse.json({ message: 'the Selected Ids has been deleted!' }, { status: 200 })
 	} catch (err) {
+		await client.query('ROLLBACK')
 		return NextResponse.json({ message: "Failed on the database side" }, { status: 500 })
+	} finally {
+		client.release();
 	}
 
 
