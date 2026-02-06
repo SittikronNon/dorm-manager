@@ -3,6 +3,15 @@ import pool from "@/database/db";
 import { checkingTenant } from "@/lib/checkingTenant";
 import { getSession } from "@/lib/auth";
 
+interface InsertedInvoiceResult {
+    id: number;
+    lease_id: number;
+    billing_month: string;
+    electricity_reading: number;
+    water_reading: number;
+    room_id: number;
+}
+
 interface MeterReadingBatch {
 	ids: number[];
 	types: ('electricity' | 'water')[];
@@ -47,12 +56,14 @@ export async function GET(request: Request) {
 		l.water_rate_per_unit,
 		(
         	SELECT unit FROM meter_readings
-                WHERE room_id = r.id AND reading_type = 'electricity'
+                WHERE room_id = r.id
+				  AND reading_type = 'electricity'
                 ORDER BY billing_month DESC, created_at DESC LIMIT 1
         ) as latest_elec_reading,
         (
             SELECT unit FROM meter_readings
-                WHERE room_id = r.id AND reading_type = 'water'
+                WHERE room_id = r.id
+				  AND reading_type = 'water'
                 ORDER BY billing_month DESC, created_at DESC LIMIT 1
         ) as latest_water_reading
 		FROM leases l
@@ -68,7 +79,7 @@ export async function GET(request: Request) {
 
 	if (mode === 'unpaid') {
 		try {
-			const result = await pool.query(`SELECT 
+			const result = await pool.query(`SELECT
                                         t.id,
                                         r.room_number,
                                         t.fullname,
@@ -133,13 +144,15 @@ export async function GET(request: Request) {
 	   i.water_units_used,
 	   l.water_rate_per_unit,
 	   i.monthly_rent,
-	   i.electricity_reading,
-	   i.water_reading,
+	   e.unit AS electricity_reading,
+	   w.unit AS water_reading,
 	   i.billing_month,
 	   i.total_amount,
 	   i.status,
 	   i.paid_at
 	   FROM invoices i
+	   LEFT JOIN meter_readings e ON e.invoice_id = i.id AND e.reading_type = 'electricity'
+	   LEFT JOIN meter_readings w ON w.invoice_id = i.id AND w.reading_type = 'water'
 	   JOIN leases l ON l.id = i.lease_id
 	   JOIN rooms r ON r.id = l.room_id
 	   JOIN tenants t ON t.id = l.tenant_id
@@ -168,13 +181,15 @@ export async function GET(request: Request) {
 	   i.water_units_used,
 	   l.water_rate_per_unit,
 	   i.monthly_rent,
-	   i.electricity_reading,
-	   i.water_reading,
+	   e.unit AS electricity_reading,
+	   w.unit AS water_reading,
 	   i.billing_month,
 	   i.total_amount,
 	   i.status,
 	   i.paid_at
 	   FROM invoices i
+	   LEFT JOIN meter_readings e ON e.invoice_id = i.id AND e.reading_type = 'electricity'
+	   LEFT JOIN meter_readings w ON w.invoice_id = i.id AND w.reading_type = 'water'
 	   JOIN leases l ON l.id = i.lease_id
 	   JOIN rooms r ON r.id = l.room_id
 	   JOIN tenants t ON t.id = l.tenant_id
@@ -214,31 +229,45 @@ export async function POST(request: Request) {
 	try {
 		await client.query("BEGIN");
 		const invoiceQuery = `
-					   INSERT INTO invoices (
-                       electricity_units_used,
-                       electricity_amount,
-                       water_units_used,
-                       water_amount,
-                       monthly_rent,
-                       total_amount,
-                       billing_month,
-					   electricity_reading,
-					   water_reading,
-                       lease_id
-                )
-					   SELECT * FROM UNNEST (
-					   		$1::numeric[],
-							$2::numeric[],
-							$3::numeric[],
-							$4::numeric[],
-							$5::numeric[],
-							$6::numeric[],
-							$7::date[],
-							$8::numeric[],
-							$9::numeric[],
-							$10::integer[]
+					   WITH input_data AS (
+					   		SELECT * FROM UNNEST (
+								$1::numeric[],
+								$2::numeric[],
+								$3::numeric[],
+								$4::numeric[],
+								$5::numeric[],
+								$6::numeric[],
+								$7::date[],
+								$8::numeric[],
+								$9::numeric[],
+								$10::integer[]
+							) AS i(e_units, e_amount, w_units, w_amount, rent, total, month, e_reading, w_reading, l_id)
+					   ),
+					   inserted_invoices AS (
+					   		INSERT INTO invoices (
+								electricity_units_used,
+								electricity_amount,
+								water_units_used,
+								water_amount,
+								monthly_rent,
+								total_amount,
+								billing_month,
+								lease_id
+							)
+							SELECT
+								e_units, e_amount, w_units, w_amount, rent, total, month, l_id
+							FROM input_data
+							RETURNING id, lease_id, billing_month
 					   )
-				RETURNING id, lease_id, (SELECT room_id FROM leases WHERE id = lease_id) as room_id, electricity_reading, water_reading, billing_month
+					   SELECT
+							ins.id,
+							ins.lease_id,
+							ins.billing_month,
+							inp.e_reading AS electricity_reading,
+							inp.w_reading AS water_reading,
+							(SELECT room_id FROM leases WHERE id = ins.lease_id) as room_id
+					   FROM inserted_invoices ins
+					   JOIN input_data inp ON ins.lease_id = inp.l_id AND ins.billing_month = inp.month
 			`;
 		const params = [
 			invoices.map(i => i.electricity_units_used),
@@ -252,10 +281,8 @@ export async function POST(request: Request) {
 			invoices.map(i => i.water_reading),
 			invoices.map(i => i.lease_id)
 		]
-
-		const result = await client.query(invoiceQuery, params)
+		const result = await client.query<InsertedInvoiceResult>(invoiceQuery, params)
 		const createInvoices = result.rows
-
 		const meterParams: MeterReadingBatch = {
 			ids: [],
 			types: [],
@@ -263,6 +290,7 @@ export async function POST(request: Request) {
 			months: [],
 			invoice_ids: [],
 		}
+		
 
 		for (const inv of createInvoices) {
 			meterParams.ids.push(inv.room_id)
@@ -300,6 +328,7 @@ export async function POST(request: Request) {
 		return NextResponse.json({ message: "Successfully Created the new invoices!", params }, { status: 201 })
 	} catch (err) {
 		await client.query('ROLLBACK')
+		console.error(err)
 		return NextResponse.json({ message: 'Failed on the database side' }, { status: 500 });
 	} finally {
 		client.release();

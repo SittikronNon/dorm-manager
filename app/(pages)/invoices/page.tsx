@@ -49,7 +49,7 @@ export default function Page() {
 
     const isSelected = selectedIds.length === 0;
 
-    const selectedInvoicesData = invoices.filter((invoice) => 
+    const selectedInvoicesData = invoices.filter((invoice) =>
         selectedIds.includes(invoice.id)
     )
 
@@ -195,9 +195,9 @@ export default function Page() {
 
             <SideDrawerInvoice
                 isOpen={isSideDrawerOpen}
-                onClose={() => setIsSideDrawerToggle(!isSideDrawerOpen)} 
+                onClose={() => setIsSideDrawerToggle(!isSideDrawerOpen)}
                 selectedInvoices={selectedInvoicesData}
-                />
+            />
 
             <div className="flex border-b border-slate-400/50 pb-4 mb-4 px-4">
                 <h1 className="text-gray-500 font-medium text-2xl">List of Invoices</h1>
@@ -227,7 +227,7 @@ export default function Page() {
             <div className="invoices-table overflow-auto bg-white p-6 rounded-xl border-l-8 border-red-500 shadow-sm col-span-2 min-h-96">
                 <table className={`w-full mt-2 border-slate-200 border-collapse`} >
                     <thead>
-                        <tr>
+                        <tr className="text-sm font-bold bg-gray-50">
                             <th className="text-left py-3 px-4">
                                 <input
                                     type="checkbox"
@@ -235,19 +235,19 @@ export default function Page() {
                                     onChange={handleSelectedAll}
                                 />
                             </th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Room No.</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Fullname</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Electricity Rate</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Electricity Reading</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Electricity Used</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Water Rate</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Water Reading</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Water Used</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Monthly Rent</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Total Amount</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Billing Month</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Paid At</th>
-                            <th className="text-gray-600 text-md px-4 py-3 font-semibold">Status</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Room No.</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Fullname</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Elec Rate</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Elec Reading</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Elec Used</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Water Rate</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Water Reading</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Water Used</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Rent</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Total</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Month</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap text-center">Paid At</th>
+                            <th className="px-3 py-3 font-semibold whitespace-nowrap">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -261,7 +261,7 @@ export default function Page() {
                                     />
                                 </td>
                                 <td className="px-4 py-3">{invoice.room_number}</td>
-                                <td className="px-4 py-3">{invoice.fullname}</td>
+                                <td className="px-4 py-3 text-left">{invoice.fullname}</td>
                                 <td className="px-4 py-3">{invoice.electricity_rate_per_unit}</td>
                                 <td className="px-4 py-3">{invoice.electricity_reading}</td>
                                 <td className="px-4 py-3">{invoice.electricity_units_used}</td>

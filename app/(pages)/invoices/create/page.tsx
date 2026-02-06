@@ -153,8 +153,6 @@ export default function Page() {
         setBillingMonth(newDateString);
 
         router.push(`/invoices/create?billing=${newDateString}`)
-
-
     }
 
 
