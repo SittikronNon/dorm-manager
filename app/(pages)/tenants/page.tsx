@@ -88,7 +88,6 @@ export default function Page() {
                             <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Phone Number</th>
                             <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">ID number</th>
                             <th className="text-center text-gray-600 text-md px-4 py-3 font-semibold">Edit</th>
-                            <th className="text-center text-gray-600 text-md px-4 py-3 font-semibold">View Lease</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,9 +101,7 @@ export default function Page() {
                                         EDIT
                                     </button>
                                 </td>
-                                <td className="px-4 py-3 text-center">
-                                    <button className="bg-amber-300 py-2 shadow-md rounded-md w-20 cursor-pointer hover:bg-amber-400 transition">VIEW</button>
-                                </td>
+                                
                             </tr>
                         ))}
                     </tbody>

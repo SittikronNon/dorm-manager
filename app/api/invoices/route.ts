@@ -4,12 +4,12 @@ import { checkingTenant } from "@/lib/checkingTenant";
 import { getSession } from "@/lib/auth";
 
 interface InsertedInvoiceResult {
-    id: number;
-    lease_id: number;
-    billing_month: string;
-    electricity_reading: number;
-    water_reading: number;
-    room_id: number;
+	id: number;
+	lease_id: number;
+	billing_month: string;
+	electricity_reading: number;
+	water_reading: number;
+	room_id: number;
 }
 
 interface MeterReadingBatch {
@@ -54,23 +54,25 @@ export async function GET(request: Request) {
 		l.monthly_rent,
 		l.electricity_rate_per_unit,
 		l.water_rate_per_unit,
-		(
+		COALESCE((
         	SELECT unit FROM meter_readings
                 WHERE room_id = r.id
 				  AND reading_type = 'electricity'
+				  AND billing_month < $1
                 ORDER BY billing_month DESC, created_at DESC LIMIT 1
-        ) as latest_elec_reading,
-        (
+        ), 0) as latest_elec_reading,
+        COALESCE((
             SELECT unit FROM meter_readings
                 WHERE room_id = r.id
 				  AND reading_type = 'water'
+				  AND billing_month < $1
                 ORDER BY billing_month DESC, created_at DESC LIMIT 1
-        ) as latest_water_reading
+        ),0) as latest_water_reading
 		FROM leases l
 		JOIN rooms r ON r.id = l.room_id
 		JOIN tenants t ON t.id = l.tenant_id
 		WHERE l.status = 'active'
-            `)
+            `, [createBilling])
 			return NextResponse.json(result.rows)
 		} catch (err) {
 			return NextResponse.json({ message: "failed on the database side" }, { status: 500 })
@@ -126,6 +128,13 @@ export async function GET(request: Request) {
 										JOIN tenants t on t.id = l.tenant_id
 										JOIN rooms r on r.id = l.room_id
 										WHERE t.id = $1
+										ORDER BY 
+										CASE 
+											WHEN i.status = 'unpaid' THEN 1 
+											WHEN i.status = 'pending' THEN 2 
+											ELSE 3 
+										END ASC,
+										i.billing_month DESC
 												`, [id])
 			return NextResponse.json(result.rows)
 		} catch (err) {
@@ -290,7 +299,7 @@ export async function POST(request: Request) {
 			months: [],
 			invoice_ids: [],
 		}
-		
+
 
 		for (const inv of createInvoices) {
 			meterParams.ids.push(inv.room_id)

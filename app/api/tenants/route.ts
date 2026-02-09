@@ -39,6 +39,7 @@ export async function GET(request: Request) {
                                 FROM tenants
                                 WHERE is_active = true
                                 AND id = $1
+                                
                 `, [id])
             return NextResponse.json(result.rows[0])
         } catch (err) {

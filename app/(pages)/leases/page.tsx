@@ -76,41 +76,41 @@ export default function Page() {
                 <h1 className="text-gray-500 font-medium text-2xl">List of Leases</h1>
                 <Link href='/leases/create' className="ml-auto bg-green-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-green-600 hover:text-white cursor-pointer">+ Add Lease</Link>
             </div>
-            <div className="bg-white p-6 rounded-xl border-l-8 border-yellow-500 shadow-sm col-span-2 min-h-96">
+            <div className="bg-white p-6 overflow-auto rounded-xl border-l-8 border-yellow-500 shadow-sm min-h-96">
                 <table className="w-full mt-2 border-slate-200 border-collapse">
                     <thead>
-                        <tr>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Room no.</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Fullname</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">id number</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Phone number</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">monthly rent</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">start date</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">end date</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">electricity rate </th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">water rate </th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Start Electricity Reading</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Start Water Reading</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">created at </th>
-                            <th className=" text-gray-600 text-md px-4 py-3 font-semibold">status </th>
+                        <tr className="text-sm">
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold w-25">Room no.</th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold w-40">Fullname</th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold w-38">รหัสบัตรประชาชน</th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold w-30">เบอร์โทรศัพท์</th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold w-25">ค่าเช่าห้อง</th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold w-30">start date</th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold w-30">end date</th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold ">electricity rate </th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold ">water rate </th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold ">เลขจดมิเตอร์แรกเข้า (ไฟฟ้า)</th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold ">เลขจดมิเตอร์แรกเข้า (น้ำ)</th>
+                            <th className="text-left text-gray-600 px-3 py-3 font-semibold w-30">created at </th>
+                            <th className=" text-gray-600 text-md px-4 py-3 font-semibold ">status </th>
                         </tr>
                     </thead>
                     <tbody>
                         {leases.map((lease) => (
                             <tr key={lease.id} className={`hover:bg-blue-600/60 ${lease.status === 'active' ? 'odd:bg-white even:bg-slate-100' : 'line-through text-gray-500 bg-gray-100'} cursor-pointer transition-colors`}>
-                                <td className="text-sm px-4 py-3">{lease.room_number}</td>
-                                <td className="text-sm px-4 py-3">{lease.fullname}</td>
-                                <td className="text-sm px-4 py-3">{lease.id_number}</td>
-                                <td className="text-sm px-4 py-3">{lease.phone_number}</td>
-                                <td className="text-sm px-4 py-3">{lease.monthly_rent}</td>
-                                <td className="text-sm px-4 py-3">{dateFormatter(lease.start_date)}</td>
-                                <td className="text-sm px-4 py-3">{dateFormatter(lease.end_date)}</td>
-                                <td className="text-sm px-4 py-3">{lease.electricity_rate_per_unit}</td>
-                                <td className="text-sm px-4 py-3">{lease.water_rate_per_unit}</td>
-                                <td className="text-sm px-4 py-3">{lease.latest_elec_reading}</td>
-                                <td className="text-sm px-4 py-3">{lease.latest_water_reading}</td>
-                                <td className="text-sm px-4 py-3">{dateFormatter(lease.created_at)}</td>
-                                <td className="text-sm px-4 py-3 text-bold text-center align-middle">
+                                <td className="text-sm px-3 py-3">{lease.room_number}</td>
+                                <td className="text-sm px-3 py-3 ">{lease.fullname}</td>
+                                <td className="text-sm px-3 py-3">{lease.id_number}</td>
+                                <td className="text-sm px-3 py-3">{lease.phone_number}</td>
+                                <td className="text-sm px-3 py-3">{lease.monthly_rent}</td>
+                                <td className="text-sm px-3 py-3">{dateFormatter(lease.start_date)}</td>
+                                <td className="text-sm px-3 py-3">{dateFormatter(lease.end_date)}</td>
+                                <td className="text-sm px-3 py-3">{lease.electricity_rate_per_unit}</td>
+                                <td className="text-sm px-3 py-3">{lease.water_rate_per_unit}</td>
+                                <td className="text-sm px-3 py-3">{lease.latest_elec_reading}</td>
+                                <td className="text-sm px-3 py-3">{lease.latest_water_reading}</td>
+                                <td className="text-sm px-3 py-3">{dateFormatter(lease.created_at)}</td>
+                                <td className="text-sm px-3 py-3 text-bold text-center align-middle">
                                     <span className={`inline-block rounded-full w-20 ${lease.status === 'active' ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600'}`}>
                                         {lease.status}
                                     </span>
