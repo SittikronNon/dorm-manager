@@ -2,26 +2,30 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react"
+import { ChangeEvent, useEffect, useState } from "react"
+import { isStatusFilter, StatusFilter } from "@/lib/isStatusFilter";
 
 interface TenantData {
     id: number;
     fullname: string;
     phone_number: string;
     id_number: string;
+    is_active: boolean;
 }
+
 
 export default function Page() {
     const [tenants, setTenants] = useState<TenantData[]>([]);
     const [isFound, setIsFound] = useState<boolean | undefined>();
     const [loading, setLoading] = useState<boolean>(true);
+    const [filterStatus, setFilterStatus] = useState<StatusFilter>('all')
     const router = useRouter();
 
     useEffect(() => {
         const fetchTenant = async () => {
             try {
                 setLoading(true);
-                const res = await fetch('/api/tenants')
+                const res = await fetch(`/api/tenants?filter=${filterStatus}`)
 
                 if (res.status === 404) {
                     setIsFound(false)
@@ -41,7 +45,7 @@ export default function Page() {
             }
         }
         fetchTenant();
-    }, [])
+    }, [filterStatus])
 
     function handleEdit(id: number) {
         if (!id) {
@@ -74,34 +78,60 @@ export default function Page() {
     }
 
 
+    async function handleStatusChange(event: ChangeEvent<HTMLSelectElement>) {
+        const newStatus = event.target.value;
+        if(isStatusFilter(newStatus)) {
+            setFilterStatus(newStatus);
+        }
+    }
+
+
     return (
         <div className="min-h-screen m-4">
             <div className="flex border-b border-slate-400/50 pb-4 mb-4 px-4">
                 <h1 className="text-gray-500 font-medium text-2xl">List of tenants</h1>
-                <Link href='/tenants/create' className="ml-auto bg-green-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-green-600 hover:text-white cursor-pointer">+ Add Tenant</Link>
+                <div className="flex ml-auto gap-10">
+                    <select name="tenant-list" id="tenant-list" className="bg-white border" onChange={handleStatusChange}>
+                        <option value="all">แสดงทั้งหมด</option>
+                        <option value="active">ผู้เช่าปัจจุบัน</option>
+                        <option value="inactive">ผู้เช่าที่ย้ายออกแล้ว</option>
+                    </select>
+                    <button className=" bg-green-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-green-600 hover:text-white cursor-pointer">Mark as active</button>
+                    <button className=" bg-red-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-red-600 hover:text-white cursor-pointer">Mark as inactive</button>
+                    <Link href='/tenants/create' className="ml-auto bg-green-300 p-2 text-lg font-semibold rounded-md shadow-md transition hover:scale-105 hover:bg-green-600 hover:text-white cursor-pointer">+ Add Tenant</Link>
+                </div>
             </div>
             <div className="bg-white p-6 rounded-xl border-l-8 border-green-500 shadow-sm col-span-2 min-h-96">
                 <table className="w-full mt-2 border-slate-200 border-collapse">
                     <thead>
                         <tr>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Fullname</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">Phone Number</th>
-                            <th className="text-left text-gray-600 text-md px-4 py-3 font-semibold">ID number</th>
-                            <th className="text-center text-gray-600 text-md px-4 py-3 font-semibold">Edit</th>
+                            <th className="text-left text-gray-600 text-md px-4 font-semibold">Fullname</th>
+                            <th className="text-left text-gray-600 text-md px-4 font-semibold">Phone Number</th>
+                            <th className="text-left text-gray-600 text-md px-4 font-semibold">ID number</th>
+                            <th className="text-center text-gray-600 text-md px-4 font-semibold">Edit</th>
+                            <th className="text-center text-gray-600 text-md px-4 font-semibold">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {tenants.map((tenant) => (
                             <tr key={tenant.id} className="hover:bg-blue-600/60 odd:bg-white even:bg-slate-100 transition-colors">
                                 <td className="px-4 py-3">{tenant.fullname}</td>
-                                <td className="px-4 py-3">{tenant.phone_number}</td>
-                                <td className="px-4 py-3">{tenant.id_number}</td>
+                                <td className="px-4 py-3 text-sm">{tenant.phone_number}</td>
+                                <td className="px-4 py-3 text-sm">{tenant.id_number}</td>
+                                <td className="text-sm px-3 py-3 text-bold text-center align-middle">
+                                    <span className={`inline-block rounded-full w-20 ${tenant.is_active === true ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600'}`}>
+                                        <select name="status" id="status" className="">
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </span>
+                                </td>
                                 <td className="px-4 py-3 text-center">
-                                    <button className="bg-orange-300 p-2 shadow-md rounded-md w-20 cursor-pointer hover:bg-orange-400 transition" onClick={() => handleEdit(tenant.id)}>
+                                    <button className="bg-orange-300 px-2 py-1 shadow-md rounded-md w-20 cursor-pointer hover:bg-orange-400 transition" onClick={() => handleEdit(tenant.id)}>
                                         EDIT
                                     </button>
                                 </td>
-                                
+
                             </tr>
                         ))}
                     </tbody>

@@ -4,16 +4,32 @@ import { checkingTenant } from "@/lib/checkingTenant";
 import { NextResponse } from "next/server";
 
 
+
+type StatusFilter = 'all' | 'active' | 'inactive';
+
+function isStatusFilter(value: string | null): value is StatusFilter {
+    return value === "all" || value === "active" || value === "inactive";
+}
+
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const tenantId = searchParams.get('id');
     const noLeaseTenants = searchParams.has('noLease')
+    const filterParams = searchParams.get('filter');
+
+    const filterValue: StatusFilter = isStatusFilter(filterParams)
+        ? filterParams
+        : "all";
+
+
 
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     if (noLeaseTenants) {
-        const result = await pool.query(`
+        try {
+            const result = await pool.query(`
                         SELECT	t.id AS tenant_id,
                                 t.fullname,
                                 t.phone_number,
@@ -23,7 +39,10 @@ export async function GET(request: Request) {
                                 LEFT JOIN leases l ON l.tenant_id = t.id
                                 WHERE l.id IS NULL
             `);
-        return NextResponse.json(result.rows)
+            return NextResponse.json(result.rows)
+        } catch (err) {
+            return NextResponse.json({ message: 'Failed to get tenant data' }, { status: 409 })
+        }
     }
 
     if (tenantId !== null) {
@@ -43,23 +62,32 @@ export async function GET(request: Request) {
                 `, [id])
             return NextResponse.json(result.rows[0])
         } catch (err) {
-            return NextResponse.json({ message: 'Failed to get tenant data' })
+            return NextResponse.json({ message: 'Failed to get tenant data' }, { status: 409 })
         }
     }
 
+
+
     try {
-        const result = await pool.query(`
-            SELECT id,
-	   fullname,
-	   phone_number,
-	   id_number
-	   FROM tenants
-	   WHERE is_active = true
-            `);
+        let query = `
+        SELECT id, fullname, phone_number, id_number, is_active 
+        FROM tenants`;
+
+        const params: boolean[] = []
+
+        if(filterValue !== "all") {
+            query += ` WHERE is_active = $1`;
+            params.push(filterValue === "active")
+        }
+
+       query += ` ORDER BY id ASC`
+
+        const result = await pool.query(query, params);
 
         return NextResponse.json(result.rows)
 
     } catch (err) {
+        console.error(err)
         return NextResponse.json({ message: 'Failed to get the tenant data' }, { status: 409 })
     }
 }
