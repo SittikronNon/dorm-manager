@@ -21,29 +21,30 @@ export default function Page() {
     const [filterStatus, setFilterStatus] = useState<StatusFilter>('all')
     const router = useRouter();
 
-    useEffect(() => {
-        const fetchTenant = async () => {
-            try {
-                setLoading(true);
-                const res = await fetch(`/api/tenants?filter=${filterStatus}`)
+    async function fetchTenant() {
+        try {
+            setLoading(true);
+            const res = await fetch(`/api/tenants?filter=${filterStatus}`);
 
-                if (res.status === 404) {
-                    setIsFound(false)
-                    throw new Error(`Tenant not found: ${res.status}`);
-                }
-
-                if (!res.ok) throw new Error(`Failed to fetch data with status: ${res.status}`);
-
-                const data = await res.json();
-                setTenants(data);
-
-            } catch (err) {
-                console.error("Failed to fetch data from API", err);
-            } finally {
-                setLoading(false);
-                setIsFound(true)
+            if (res.status === 404) {
+                setIsFound(false)
+                throw new Error(`Tenant not found: ${res.status}`);
             }
+
+            if (!res.ok) throw new Error(`Failed to fetch data with status: ${res.status}`);
+
+            const data = await res.json();
+            setTenants(data);
+            setIsFound(true)
+        } catch (err) {
+            console.error("Failed to fetch data from API", err);
+        } finally {
+            setLoading(false)
         }
+
+    }
+
+    useEffect(() => {
         fetchTenant();
     }, [filterStatus])
 
@@ -54,6 +55,24 @@ export default function Page() {
         }
 
         router.push(`/tenants/${id}`)
+    }
+
+    async function handleStatusChange(id: number, statusValue: string) {
+        const isActive = statusValue === 'active';
+
+        try {
+            const res = await fetch(`api/tenants/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isActive })
+            })
+
+            if (res.ok) {
+                fetchTenant();
+            }
+        } catch (err) {
+            console.error("Update error", err)
+        }
     }
 
     if (loading) {
@@ -78,9 +97,9 @@ export default function Page() {
     }
 
 
-    async function handleStatusChange(event: ChangeEvent<HTMLSelectElement>) {
+    async function handleStatusFilterChange(event: ChangeEvent<HTMLSelectElement>) {
         const newStatus = event.target.value;
-        if(isStatusFilter(newStatus)) {
+        if (isStatusFilter(newStatus)) {
             setFilterStatus(newStatus);
         }
     }
@@ -91,7 +110,7 @@ export default function Page() {
             <div className="flex border-b border-slate-400/50 pb-4 mb-4 px-4">
                 <h1 className="text-gray-500 font-medium text-2xl">List of tenants</h1>
                 <div className="flex ml-auto gap-10">
-                    <select name="tenant-list" id="tenant-list" className="bg-white border" onChange={handleStatusChange}>
+                    <select name="tenant-list" id="tenant-list" className="bg-white border" onChange={handleStatusFilterChange}>
                         <option value="all">แสดงทั้งหมด</option>
                         <option value="active">ผู้เช่าปัจจุบัน</option>
                         <option value="inactive">ผู้เช่าที่ย้ายออกแล้ว</option>
@@ -120,7 +139,7 @@ export default function Page() {
                                 <td className="px-4 py-3 text-sm">{tenant.id_number}</td>
                                 <td className="text-sm px-3 py-3 text-bold text-center align-middle">
                                     <span className={`inline-block rounded-full w-20 ${tenant.is_active === true ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600'}`}>
-                                        <select name="status" id="status" className="">
+                                        <select name="status" id="status" value={tenant.is_active ? "active" : "inactive"} onChange={(event) => handleStatusChange(tenant.id, event.target.value)} className="">
                                             <option value="active">Active</option>
                                             <option value="inactive">Inactive</option>
                                         </select>
